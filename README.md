@@ -10,9 +10,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/AI-assisted-7C3AED?style=flat" alt="AI-assisted" />
-  <img src="https://img.shields.io/badge/GitHub-181717?style=flat&amp;logo=github&amp;logoColor=white" alt="GitHub" />
-  <img src="https://img.shields.io/badge/Learning-2563EB?style=flat" alt="Learning" />
+  <img src="./assets/badges.svg" width="216" height="20" alt="AI-assisted · GitHub · Learning" />
 </p>
 
 <p align="center">
