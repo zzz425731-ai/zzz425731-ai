@@ -1,18 +1,39 @@
-# 你好，我是 zzz425731-ai 👋
+<h1 align="center">Zachary chou</h1>
 
-> 把想法写下来，把第一步做出来。
+<p align="center">
+  <strong>你好，我是 Zachary。 / Hi, I'm Zachary.</strong>
+</p>
 
-欢迎来到我的 GitHub。
+<p align="center">
+  把想法写下来，把第一步做出来。<br />
+  <em>Write ideas down. Take the first step.</em>
+</p>
 
-我正在尝试用 AI 辅助创作和实践，也从这个主页开始，整理自己的想法与项目。
+<p align="center">
+  <img src="https://img.shields.io/badge/AI-assisted-7C3AED?style=flat" alt="AI-assisted" />
+  <img src="https://img.shields.io/badge/GitHub-181717?style=flat&amp;logo=github&amp;logoColor=white" alt="GitHub" />
+  <img src="https://img.shields.io/badge/Learning-2563EB?style=flat" alt="Learning" />
+</p>
 
-## 这里会记录
+<p align="center">
+  <a href="https://github.com/zzz425731-ai?tab=repositories">我的项目 / My repositories ↗</a>
+</p>
 
-- 💡 **想法与尝试**：从一个念头开始，逐步做出可以分享的成果。
-- 🛠️ **项目与实践**：记录过程、遇到的问题和解决方法。
-- 📚 **学习与积累**：留下有用的笔记，给下一次探索一个起点。
+## 关于我 / About me
 
----
+- **正在探索 AI 辅助创作与项目实践。**<br />
+  Exploring AI-assisted creation and turning ideas into small projects.
+- **用 GitHub 整理想法、项目与学习记录。**<br />
+  Keeping ideas, projects, and learning notes together on GitHub.
+- **最近在做什么？完善我的 GitHub 个人主页。**<br />
+  Currently building and refining my GitHub profile.
 
-慢慢积累，持续更新。
+## 项目一角 / A few projects
 
+| 项目 / Project | 简介 / Description |
+| :--- | :--- |
+| [Personal Homepage](https://github.com/zzz425731-ai/zzz425731-ai) | 我的 GitHub 个人主页，也是记录想法、学习与实践的起点。<br />My GitHub profile, a starting point for ideas, learning, and hands-on projects. |
+
+<p align="center">
+  <em>慢慢积累，持续更新。 / Keep learning. Keep building.</em>
+</p>
