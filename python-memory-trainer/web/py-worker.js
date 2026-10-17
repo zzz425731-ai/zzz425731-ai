@@ -17,7 +17,9 @@ self.onmessage = async (event) => {
     }
     try {
       importScripts("pyodide/pyodide.js");
-      pyodide = await loadPyodide({ indexURL: new URL("pyodide/", self.location.href).href });
+      const base = new URL("pyodide/", self.location.href).href;
+      // The standard library zip is served under a .wasm name because the artifact host doesn't serve .zip files.
+      pyodide = await loadPyodide({ indexURL: base, stdLibURL: base + "python_stdlib.zip.wasm" });
       pyodide.runPython(msg.checker);
       self.postMessage({ type: "ready" });
     } catch (err) {

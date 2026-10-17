@@ -176,6 +176,8 @@ def main():
     (DIST / "index.html").write_text(STANDALONE_HEAD + page + "\n</body>\n</html>\n", encoding="utf-8")
     shutil.copy(WEB / "py-worker.js", DIST / "py-worker.js")
     fetch_pyodide()
+    # same bytes under a name the artifact host serves (it doesn't serve .zip); py-worker.js loads this one
+    shutil.copy(DIST / "pyodide" / "python_stdlib.zip", DIST / "pyodide" / "python_stdlib.zip.wasm")
     size = sum(f.stat().st_size for f in DIST.rglob("*") if f.is_file())
     print(f"built {DIST} ({len(cards)} cards, {size / 1e6:.1f} MB total)")
 
