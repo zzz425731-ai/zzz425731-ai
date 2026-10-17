@@ -19,6 +19,19 @@ python pymem.py stats      # how you're doing per topic
 Do one session a day. The app decides what you see: cards you keep getting right
 show up less and less often, and cards you miss come back quickly.
 
+## On your iPhone (web version)
+
+`web/` holds a phone-first web version with the same 135 cards and the same box schedule.
+One-liners and code answers are still checked by real Python, running in the browser
+(Pyodide, about 14 MB, downloaded once). If a browser blocks that, the app shows the
+reference answer and you grade yourself. Typing code is phone-friendly: a key bar for
+Tab, brackets and colons; Return auto-indents; iOS curly quotes are straightened before checking.
+
+```bash
+python web/build.py        # writes web/dist/ (cards data, worker, Pyodide)
+cd web/dist && python -m http.server 8000   # then open http://<your-computer>:8000 on the phone
+```
+
 ## The four card types
 
 | Type | You do | Checked by |
