@@ -1,4 +1,4 @@
-<title>PyMem</title>
+<title>PyMem Python Trainer</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -12,24 +12,27 @@
   --ink: #142033;
   --muted: #5a6678;
   --line: #d8dee7;
+  --field-line: #8792a3;
   --accent: #2f67a8;
   --accent-ink: #ffffff;
   --accent-soft: #e4edf8;
+  --learn: #9ab3d4;
   --mark: #ffd43b;
   --mark-soft: #fff4c7;
-  --good: #1d7a52;
+  --good: #1a7350;
   --good-soft: #e2f3ea;
   --bad: #b3392f;
   --bad-soft: #fbe6e3;
   --warn: #8f5b00;
   --warn-soft: #fcefd6;
   --code-bg: #f6f8fb;
+  --shadow: rgba(20, 32, 51, 0.35);
   --t-kw: #8a3fbf;
   --t-str: #2b7a3e;
   --t-num: #a05600;
   --t-bi: #1d6c8a;
   --t-fn: #2f67a8;
-  --t-com: #788396;
+  --t-com: #636e80;
 
   --font-display: "Recursive", ui-rounded, system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-body: "Recursive", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
@@ -45,22 +48,22 @@
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #0e131a; --surface: #161d27; --ink: #e4ebf4; --muted: #97a3b6; --line: #273243;
-    --accent: #7eaae6; --accent-ink: #0e131a; --accent-soft: #1b2a3d;
+    --bg: #0e131a; --surface: #161d27; --ink: #e4ebf4; --muted: #97a3b6; --line: #273243; --field-line: #5d6a7e;
+    --accent: #7eaae6; --accent-ink: #0e131a; --accent-soft: #1b2a3d; --learn: #3d5778;
     --mark: #f0c93a; --mark-soft: #3a3218;
     --good: #5bc893; --good-soft: #14302a; --bad: #f08b80; --bad-soft: #3b1f1e;
-    --warn: #e8b65a; --warn-soft: #3a2e17; --code-bg: #10161f;
-    --t-kw: #c99bf2; --t-str: #8fd19e; --t-num: #f2b36b; --t-bi: #7cc4de; --t-fn: #8db8f0; --t-com: #737f91;
+    --warn: #e8b65a; --warn-soft: #3a2e17; --code-bg: #10161f; --shadow: rgba(0, 0, 0, 0.55);
+    --t-kw: #c99bf2; --t-str: #8fd19e; --t-num: #f2b36b; --t-bi: #7cc4de; --t-fn: #8db8f0; --t-com: #7d899b;
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #0e131a; --surface: #161d27; --ink: #e4ebf4; --muted: #97a3b6; --line: #273243;
-  --accent: #7eaae6; --accent-ink: #0e131a; --accent-soft: #1b2a3d;
+  --bg: #0e131a; --surface: #161d27; --ink: #e4ebf4; --muted: #97a3b6; --line: #273243; --field-line: #5d6a7e;
+  --accent: #7eaae6; --accent-ink: #0e131a; --accent-soft: #1b2a3d; --learn: #3d5778;
   --mark: #f0c93a; --mark-soft: #3a3218;
   --good: #5bc893; --good-soft: #14302a; --bad: #f08b80; --bad-soft: #3b1f1e;
-  --warn: #e8b65a; --warn-soft: #3a2e17; --code-bg: #10161f;
-  --t-kw: #c99bf2; --t-str: #8fd19e; --t-num: #f2b36b; --t-bi: #7cc4de; --t-fn: #8db8f0; --t-com: #737f91;
+  --warn: #e8b65a; --warn-soft: #3a2e17; --code-bg: #10161f; --shadow: rgba(0, 0, 0, 0.55);
+  --t-kw: #c99bf2; --t-str: #8fd19e; --t-num: #f2b36b; --t-bi: #7cc4de; --t-fn: #8db8f0; --t-com: #7d899b;
   color-scheme: dark;
 }
 
@@ -89,14 +92,15 @@ body::before {
 /* ---------- header ---------- */
 .topbar {
   position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5;
-  display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;
-  padding-block: 0.75rem; background: var(--bg);
+  display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;
+  padding-block: 0.4rem; background: var(--bg);
   border-bottom: 1px solid var(--line);
 }
 .brand {
+  flex: none; min-height: 44px;
   font: inherit; font-family: var(--font-code); font-variation-settings: "MONO" 1, "CASL" 0;
   font-weight: 700; font-size: var(--step-1); color: var(--ink);
-  background: none; border: 0; padding: 0.25rem 0; cursor: pointer; display: inline-flex; align-items: center;
+  background: none; border: 0; padding: 0; cursor: pointer; display: inline-flex; align-items: center;
 }
 .brand .prompt { color: var(--accent); margin-right: 0.45ch; }
 .caret {
@@ -104,16 +108,17 @@ body::before {
   background: var(--mark); animation: blink 1.1s steps(1) infinite; vertical-align: -0.15em;
 }
 @keyframes blink { 50% { opacity: 0; } }
-.top-meta { display: flex; align-items: center; gap: 0.5rem; min-width: 0; }
+.top-meta { display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 0.25rem 0.5rem; min-width: 0; }
 .chip {
   display: inline-flex; align-items: center; gap: 0.35em; white-space: nowrap;
   font-size: var(--step--1); font-weight: 600; padding: 0.25rem 0.6rem; border-radius: 999px;
   background: var(--mark-soft); color: var(--ink);
 }
-.sync { font-size: var(--step--1); color: var(--muted); white-space: nowrap; }
+.sync { font-size: var(--step--1); color: var(--muted); white-space: nowrap; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .sync::before { content: ""; display: inline-block; width: 0.5rem; height: 0.5rem; border-radius: 50%; margin-right: 0.35rem; background: var(--muted); vertical-align: 0.05em; }
 .sync[data-state="synced"]::before { background: var(--good); }
 .sync[data-state="saving"]::before, .sync[data-state="connecting"]::before { background: var(--warn); }
+.sync[data-state="error"] { color: var(--bad); font-weight: 600; }
 .sync[data-state="error"]::before { background: var(--bad); }
 
 /* ---------- type ---------- */
@@ -127,6 +132,10 @@ p { margin: 0; }
 .small { font-size: var(--step--1); }
 .mono { font-family: var(--font-code); font-variation-settings: "MONO" 1, "CASL" 0; }
 .num { font-variant-numeric: tabular-nums; }
+.prose code {
+  font-family: var(--font-code); font-variation-settings: "MONO" 1, "CASL" 0; font-size: 0.92em;
+  background: var(--code-bg); border: 1px solid var(--line); border-radius: 4px; padding: 0 0.25em;
+}
 
 /* ---------- layout ---------- */
 .view { display: flex; flex-direction: column; gap: 1.5rem; padding-top: 1.25rem; }
@@ -143,11 +152,9 @@ button { font: inherit; color: inherit; }
   min-height: 44px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem;
   touch-action: manipulation;
 }
-.btn:hover { border-color: var(--accent); }
 .btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
 .btn.big { width: 100%; font-size: var(--step-1); padding: 0.9rem 1.2rem; }
 .btn.ghost { background: transparent; border-color: transparent; color: var(--accent); padding-inline: 0.5rem; }
-.btn.ghost:hover { border-color: transparent; text-decoration: underline; }
 .btn[disabled] { opacity: 0.55; cursor: default; }
 :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 .grades { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.5rem; }
@@ -162,7 +169,11 @@ button { font: inherit; color: inherit; }
 .grade.hard { color: var(--warn); }
 .grade.good { color: var(--good); }
 .grade.easy { color: var(--accent); }
-.grade:hover { background: var(--accent-soft); }
+@media (hover: hover) {
+  .btn:hover { border-color: var(--accent); }
+  .btn.ghost:hover { border-color: transparent; text-decoration: underline; }
+  .grade:hover { background: var(--accent-soft); }
+}
 
 /* ---------- home ---------- */
 .today { display: flex; flex-direction: column; gap: 1rem; }
@@ -173,7 +184,7 @@ button { font: inherit; color: inherit; }
 .chips::-webkit-scrollbar { display: none; }
 .topic-chip {
   flex: none; appearance: none; border: 1px solid var(--line); background: var(--surface); color: var(--ink);
-  border-radius: 999px; padding: 0.4rem 0.8rem; font-size: var(--step--1); font-weight: 600; cursor: pointer; min-height: 36px;
+  border-radius: 999px; padding: 0.4rem 0.9rem; font-size: var(--step--1); font-weight: 600; cursor: pointer; min-height: 44px;
 }
 .topic-chip[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
 .topics { display: flex; flex-direction: column; }
@@ -188,13 +199,15 @@ button { font: inherit; color: inherit; }
 .bar span { display: block; height: 100%; }
 .bar .m { background: var(--mark); }
 .bar .r { background: var(--accent); }
-.bar .l { background: color-mix(in srgb, var(--accent) 40%, var(--line)); }
+.bar .l { background: var(--learn); }
 .legend { display: flex; flex-wrap: wrap; gap: 0.25rem 1rem; font-size: var(--step--1); color: var(--muted); }
 .legend i { display: inline-block; width: 0.7rem; height: 0.7rem; border-radius: 3px; margin-right: 0.35rem; vertical-align: -0.05em; }
+.legend .m { background: var(--mark); }
+.legend .r { background: var(--accent); }
+.legend .l { background: var(--learn); }
 .stats-line { display: flex; flex-wrap: wrap; gap: 0.25rem 1rem; font-size: var(--step--1); color: var(--muted); font-variant-numeric: tabular-nums; }
-.note {
-  border-radius: 12px; padding: 0.75rem 0.9rem; background: var(--accent-soft); font-size: var(--step--1);
-}
+.note { border-radius: 12px; padding: 0.75rem 0.9rem; background: var(--accent-soft); font-size: var(--step--1); }
+.note.warn { background: var(--bad-soft); }
 
 /* ---------- session ---------- */
 .session-top { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
@@ -203,14 +216,12 @@ button { font: inherit; color: inherit; }
 .card {
   background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
   padding: 1.1rem; display: flex; flex-direction: column; gap: 1rem; min-width: 0;
-  box-shadow: 0 1px 0 var(--line), 0 10px 30px -18px rgba(20, 32, 51, 0.35);
+  box-shadow: 0 1px 0 var(--line), 0 10px 30px -18px var(--shadow);
 }
 .card.enter { animation: deal 0.28s ease-out; }
 @keyframes deal { from { transform: translateY(8px); opacity: 0.4; } to { transform: none; opacity: 1; } }
 .card-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem 0.6rem; font-size: var(--step--1); color: var(--muted); }
-.kind {
-  font-weight: 700; padding: 0.15rem 0.55rem; border-radius: 999px; background: var(--accent-soft); color: var(--accent);
-}
+.kind { font-weight: 700; padding: 0.15rem 0.55rem; border-radius: 999px; background: var(--accent-soft); color: var(--accent); }
 .boxes { display: inline-flex; gap: 3px; align-items: center; }
 .boxes i { width: 9px; height: 9px; border-radius: 2px; border: 1px solid var(--muted); display: inline-block; }
 .boxes i.on { background: var(--accent); border-color: var(--accent); }
@@ -219,7 +230,7 @@ button { font: inherit; color: inherit; }
 .code {
   margin: 0; padding: 0.75rem 0.9rem; background: var(--code-bg); border: 1px solid var(--line); border-radius: 10px;
   font-family: var(--font-code); font-variation-settings: "MONO" 1, "CASL" 0; font-size: 0.9375rem; line-height: 1.55;
-  overflow-x: auto; white-space: pre; tab-size: 4; -webkit-overflow-scrolling: touch;
+  overflow-x: auto; white-space: pre; tab-size: 4; -webkit-overflow-scrolling: touch; min-width: 0;
 }
 .t-kw { color: var(--t-kw); font-weight: 600; }
 .t-str { color: var(--t-str); }
@@ -228,11 +239,11 @@ button { font: inherit; color: inherit; }
 .t-fn { color: var(--t-fn); font-weight: 600; }
 .t-com { color: var(--t-com); font-style: italic; }
 .target { display: flex; flex-wrap: wrap; gap: 0.25rem 0.6rem; align-items: baseline; }
-.target .code { padding: 0.35rem 0.6rem; flex: 1 1 12rem; min-width: 0; }
-label.lbl { font-size: var(--step--1); font-weight: 600; color: var(--muted); }
+.target .code { padding: 0.35rem 0.6rem; flex: 1 1 12rem; }
+.lbl { font-size: var(--step--1); font-weight: 600; color: var(--muted); }
 .field, .code-input {
   width: 100%; font-size: 16px; color: var(--ink); background: var(--surface);
-  border: 1px solid var(--line); border-radius: 10px; padding: 0.65rem 0.75rem;
+  border: 1px solid var(--field-line); border-radius: 10px; padding: 0.65rem 0.75rem;
 }
 .field.mono, .code-input { font-family: var(--font-code); font-variation-settings: "MONO" 1, "CASL" 0; }
 .field:focus, .code-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
@@ -246,7 +257,7 @@ label.lbl { font-size: var(--step--1); font-weight: 600; color: var(--muted); }
 }
 .keybar::-webkit-scrollbar { display: none; }
 .key {
-  flex: none; min-width: 2.6rem; min-height: 40px; padding: 0 0.6rem; border-radius: 8px; border: 1px solid var(--line);
+  flex: none; min-width: 44px; min-height: 44px; padding: 0 0.6rem; border-radius: 8px; border: 1px solid var(--line);
   background: var(--surface); color: var(--ink); cursor: pointer; touch-action: manipulation;
   font-family: var(--font-code); font-variation-settings: "MONO" 1, "CASL" 0; font-size: 1rem; font-weight: 600;
   -webkit-user-select: none; user-select: none;
@@ -266,13 +277,12 @@ label.lbl { font-size: var(--step--1); font-weight: 600; color: var(--muted); }
   font-variation-settings: "MONO" 1; font-size: 0.875rem;
 }
 .answer-text { white-space: pre-wrap; overflow-wrap: anywhere; }
-.answer-text.mono { font-size: 0.875rem; }
 .diff .yours { color: var(--bad); }
 .why { background: var(--mark-soft); border-radius: 12px; padding: 0.8rem 0.95rem; display: flex; flex-direction: column; gap: 0.3rem; }
 .why .eyebrow { color: var(--ink); }
-.why p { white-space: pre-line; overflow-wrap: anywhere; }
-.pystatus { font-size: var(--step--1); color: var(--muted); display: inline-flex; align-items: center; gap: 0.35rem; white-space: nowrap; }
-.pystatus i { width: 0.5rem; height: 0.5rem; border-radius: 50%; background: var(--muted); display: inline-block; }
+.why p { white-space: pre-wrap; overflow-wrap: anywhere; }
+.pystatus { font-size: var(--step--1); color: var(--muted); display: inline-flex; align-items: baseline; gap: 0.35rem; max-width: 100%; }
+.pystatus i { flex: none; width: 0.5rem; height: 0.5rem; border-radius: 50%; background: var(--muted); display: inline-block; }
 .pystatus[data-state="ready"] i { background: var(--good); }
 .pystatus[data-state="loading"] i { background: var(--warn); animation: blink 1s steps(1) infinite; }
 .pystatus[data-state="failed"] i { background: var(--bad); }
@@ -281,15 +291,18 @@ label.lbl { font-size: var(--step--1); font-weight: 600; color: var(--muted); }
 .score { font-family: var(--font-display); font-variation-settings: "CASL" 1; font-weight: 800; font-size: 3.5rem; line-height: 1; font-variant-numeric: tabular-nums; }
 .missed { margin: 0; padding-left: 1.1rem; display: flex; flex-direction: column; gap: 0.3rem; }
 
-/* ---------- browse ---------- */
+/* ---------- study sheet ---------- */
 .browse-tools { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0.5rem; }
 select.field { appearance: auto; }
-details.sheet { border-bottom: 1px solid var(--line); padding-block: 0.6rem; }
-details.sheet summary { cursor: pointer; font-weight: 600; list-style: none; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 0.75rem; align-items: baseline; }
+details.sheet { border-bottom: 1px solid var(--line); }
+details.sheet summary {
+  cursor: pointer; font-weight: 600; list-style: none; min-height: 44px; padding-block: 0.6rem;
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 0.75rem; align-items: center;
+}
 details.sheet summary::-webkit-details-marker { display: none; }
 details.sheet summary .sum-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 details.sheet[open] summary .sum-text { white-space: normal; }
-details.sheet .stack { padding-top: 0.75rem; }
+details.sheet > .stack { padding-bottom: 0.9rem; }
 
 /* ---------- settings ---------- */
 .setting { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 0.75rem; align-items: center; padding-block: 0.75rem; border-bottom: 1px solid var(--line); }
@@ -311,7 +324,7 @@ details.sheet .stack { padding-top: 0.75rem; }
     <button class="brand" id="brand" type="button" aria-label="PyMem, back to today"><span class="prompt">&gt;&gt;&gt;</span>pymem<span class="caret" aria-hidden="true"></span></button>
     <div class="top-meta">
       <span id="streak" class="chip num"></span>
-      <span id="sync" class="sync" data-state="local">this device</span>
+      <span id="sync" class="sync" data-state="local" role="status">this device</span>
     </div>
   </header>
   <main id="view" class="view"></main>
@@ -345,6 +358,10 @@ function h(tag, attrs, ...children) {
     else if (v === true) el.setAttribute(k, "");
     else el.setAttribute(k, v);
   }
+  return add(el, children);
+}
+// Append children, skipping null/false and flattening arrays (native append would print "null").
+function add(el, ...children) {
   for (const child of children.flat(Infinity)) {
     if (child == null || child === false) continue;
     el.append(child instanceof Node ? child : document.createTextNode(String(child)));
@@ -361,14 +378,7 @@ function shuffle(list) {
   return list;
 }
 function pick(list) { return list[Math.floor(Math.random() * list.length)]; }
-function clone(value) { return JSON.parse(JSON.stringify(value)); }
-function canonical(value) {
-  if (Array.isArray(value)) return "[" + value.map(canonical).join(",") + "]";
-  if (value && typeof value === "object") {
-    return "{" + Object.keys(value).sort().map((k) => JSON.stringify(k) + ":" + canonical(value[k])).join(",") + "}";
-  }
-  return JSON.stringify(value);
-}
+const plainText = (s) => (s || "").replace(/`/g, "");
 
 // Dates are local calendar days as "YYYY-MM-DD", like the CLI.
 function todayISO() {
@@ -395,87 +405,188 @@ function plainPython(text) {
     .replace(/\t/g, "    ");
 }
 
-// ===================================================================== storage
-const LOCAL_KEY = "pymem.progress.v1";
+// ===================================================================== browser storage
 const PREFS_KEY = "pymem.prefs.v1";
 function readLocal(key) {
   try { const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : null; } catch { return null; }
 }
 function writeLocal(key, value) {
-  try { localStorage.setItem(key, JSON.stringify(value)); return true; } catch { return false; }  // private mode or blocked storage
+  try { localStorage.setItem(key, JSON.stringify(value)); return true; } catch { return false; }  // private mode, blocked or full
 }
-// Same shape as the CLI's ~/.pymem_progress.json, plus savedAt and epoch (when progress was last reset).
-function emptyProgress() { return { version: 1, cards: {}, history: {}, savedAt: 0, epoch: 0 }; }
-function normalizeProgress(raw) {
-  const p = emptyProgress();
-  if (!raw || typeof raw !== "object") return p;
-  if (raw.cards && typeof raw.cards === "object") {
-    for (const [id, rec] of Object.entries(raw.cards)) {
-      if (rec && typeof rec === "object" && typeof rec.due === "string") {
-        p.cards[id] = { box: Math.max(0, Math.min(MASTERED, Number(rec.box) || 0)), due: rec.due,
-                        seen: Number(rec.seen) || 0, right: Number(rec.right) || 0 };
-      }
-    }
-  }
-  if (raw.history && typeof raw.history === "object") {
-    for (const [day, n] of Object.entries(raw.history)) {
-      if (/^\d{4}-\d{2}-\d{2}$/.test(day)) p.history[day] = Number(n) || 0;
-    }
-  }
-  p.savedAt = Number(raw.savedAt) || 0;
-  p.epoch = Number(raw.epoch) || 0;
-  return p;
-}
-// Two devices may both have studied: per card keep the record with more reviews,
-// per day keep the larger count. Nothing learned on either device is lost.
-// A reset starts a new epoch: the copy with the newer epoch wins outright, so a reset
-// on one device isn't undone by old data on another. Imports ignore epochs.
-function mergeProgress(a, b, { ignoreEpoch = false } = {}) {
-  if (!ignoreEpoch && a.epoch !== b.epoch) return clone(a.epoch > b.epoch ? a : b);
-  const out = emptyProgress();
-  out.epoch = a.epoch;
-  for (const id of new Set([...Object.keys(a.cards), ...Object.keys(b.cards)])) {
-    const ra = a.cards[id], rb = b.cards[id];
-    if (!ra || !rb) { out.cards[id] = clone(ra || rb); continue; }
-    const aWins = ra.seen !== rb.seen ? ra.seen > rb.seen : ra.due >= rb.due;
-    out.cards[id] = clone(aWins ? ra : rb);
-  }
-  for (const day of new Set([...Object.keys(a.history), ...Object.keys(b.history)])) {
-    out.history[day] = Math.max(a.history[day] ?? -1, b.history[day] ?? -1);
-  }
-  out.savedAt = Math.max(a.savedAt, b.savedAt);
-  return out;
+function storageWorks() {
+  try {
+    localStorage.setItem("pymem.probe", "1");
+    const ok = localStorage.getItem("pymem.probe") === "1";
+    localStorage.removeItem("pymem.probe");
+    return ok;
+  } catch { return false; }
 }
 
 const state = {
-  progress: normalizeProgress(readLocal(LOCAL_KEY)),
+  progress: { cards: {}, history: {} },  // replayed from Log.events; never edited directly
   prefs: Object.assign({ size: 20, newPer: 8, topics: [] }, readLocal(PREFS_KEY) || {}),
   view: "home",
   session: null,
   browse: { topic: "", query: "" },
-  localOk: true,  // false when this browser refuses to store anything
+  localOk: storageWorks(),
 };
 state.prefs.topics = (state.prefs.topics || []).filter((t) => t in TOPICS);
-
-function saveProgress() {
-  state.progress.savedAt = Date.now();
-  state.localOk = writeLocal(LOCAL_KEY, state.progress);
-  Sync.push();
-  if (!Sync.ref) Sync.show(Sync.state);  // refresh the "not saved" warning
-}
 function savePrefs() { writeLocal(PREFS_KEY, state.prefs); }
 
-// ===================================================================== capabilities
+// ===================================================================== progress log
+// Progress is an append-only log of events. Boxes, due dates and daily counts are replayed from it,
+// so combining two copies (another device, another tab, the account) is just the union of their
+// events: no copy can erase another's reviews, and resets and imports sit at a definite point in time.
+//   review {k:"r", c: card id, g: grade 0-3, d: study day, t, x: 1 for practice}
+//   fix    {k:"f", of: review event id, t}       "I was right (just a typo)"
+//   reset  {k:"z", t}
+//   import {k:"i", t, cards, history}            a backup or the CLI's progress file
+//   visit  {k:"v", d, t}                         opened on a day with nothing due: keeps the streak
+// t is milliseconds and never goes backwards on one device (see Log.add).
+const LOG_KEY = "pymem.log.v2";
+const OLD_KEY = "pymem.progress.v1";  // the first web build stored a snapshot here
+const DEVICE_KEY = "pymem.device";
+const DAY_RE = /^\d{4}-\d{2}-\d{2}$/;
+const toInt = (v) => { const n = Math.trunc(Number(v)); return Number.isFinite(n) && n > 0 ? n : 0; };
+
+// A snapshot in the CLI's ~/.pymem_progress.json shape: {cards: {id: {box, due, seen, right}}, history: {day: n}}
+function normalizeSnapshot(raw) {
+  const out = { cards: {}, history: {} };
+  if (!raw || typeof raw !== "object") return out;
+  if (raw.cards && typeof raw.cards === "object" && !Array.isArray(raw.cards)) {
+    for (const [id, rec] of Object.entries(raw.cards)) {
+      if (rec && typeof rec === "object" && typeof rec.due === "string" && DAY_RE.test(rec.due)) {
+        out.cards[id] = { box: Math.min(MASTERED, toInt(rec.box)), due: rec.due, seen: toInt(rec.seen), right: toInt(rec.right) };
+      }
+    }
+  }
+  if (raw.history && typeof raw.history === "object" && !Array.isArray(raw.history)) {
+    for (const [day, n] of Object.entries(raw.history)) if (DAY_RE.test(day)) out.history[day] = toInt(n);
+  }
+  return out;
+}
+function normalizeEvent(e) {
+  if (!e || typeof e !== "object") return null;
+  const t = Number(e.t);
+  if (!Number.isFinite(t) || t < 0) return null;
+  if (e.k === "r") {
+    const g = Number(e.g);
+    if (typeof e.c !== "string" || typeof e.d !== "string" || !DAY_RE.test(e.d) || ![0, 1, 2, 3].includes(g)) return null;
+    return e.x ? { k: "r", c: e.c, g, d: e.d, t, x: 1 } : { k: "r", c: e.c, g, d: e.d, t };
+  }
+  if (e.k === "f") return typeof e.of === "string" ? { k: "f", of: e.of, t } : null;
+  if (e.k === "z") return { k: "z", t };
+  if (e.k === "v") return typeof e.d === "string" && DAY_RE.test(e.d) ? { k: "v", d: e.d, t } : null;
+  if (e.k === "i") { const s = normalizeSnapshot(e); return { k: "i", t, cards: s.cards, history: s.history }; }
+  return null;
+}
+function normalizeEvents(raw) {
+  const out = {};
+  if (raw && typeof raw === "object" && !Array.isArray(raw)) {
+    for (const [id, e] of Object.entries(raw)) {
+      const ev = id.length <= 64 ? normalizeEvent(e) : null;
+      if (ev) out[id] = ev;
+    }
+  }
+  return out;
+}
+function replay(events) {
+  const ids = Object.keys(events).sort((a, b) => events[a].t - events[b].t || (a < b ? -1 : a > b ? 1 : 0));
+  const fixed = new Set(ids.filter((id) => events[id].k === "f").map((id) => events[id].of));
+  let cards = {}, history = {};
+  for (const id of ids) {
+    const e = events[id];
+    if (e.k === "z") { cards = {}; history = {}; }
+    else if (e.k === "r") {
+      history[e.d] = (history[e.d] || 0) + 1;
+      if (!e.x) reschedule(cards[e.c] || (cards[e.c] = { box: 0, due: e.d, seen: 0, right: 0 }), fixed.has(id) ? GOOD : e.g, e.d);
+    } else if (e.k === "v") {
+      if (!(e.d in history)) history[e.d] = 0;
+    } else if (e.k === "i") {
+      for (const [c, rec] of Object.entries(e.cards)) if (!cards[c] || rec.seen > cards[c].seen) cards[c] = { ...rec };
+      for (const [d, n] of Object.entries(e.history)) history[d] = Math.max(history[d] || 0, n);
+    }
+  }
+  return { cards, history };
+}
+
+const Log = {
+  events: {}, device: "", seq: 0, maxT: 0,
+  init() {
+    this.device = readLocal(DEVICE_KEY);
+    if (typeof this.device !== "string" || !/^[a-z0-9]{8}$/.test(this.device)) {
+      this.device = Array.from(crypto.getRandomValues(new Uint8Array(8)), (b) => "abcdefghijklmnopqrstuvwxyz0123456789"[b % 36]).join("");
+      writeLocal(DEVICE_KEY, this.device);
+    }
+    const saved = readLocal(LOG_KEY);
+    this.union(normalizeEvents(saved && saved.events));
+    if (!saved) {
+      const old = normalizeSnapshot(readLocal(OLD_KEY));
+      if (Object.keys(old.cards).length || Object.keys(old.history).length) {
+        this.events["m-" + this.device] = { k: "i", t: 1, cards: old.cards, history: old.history };
+      }
+    }
+    this.refresh();
+  },
+  union(incoming) {
+    let added = 0;
+    for (const [id, e] of Object.entries(incoming)) {
+      if (!(id in this.events)) { this.events[id] = e; added++; }
+      if (e.t > this.maxT) this.maxT = e.t;
+    }
+    return added;
+  },
+  refresh() { state.progress = replay(this.events); },
+  // Record something you did. Saved in this browser at once, then uploaded.
+  add(fields) {
+    const t = Math.max(Date.now(), this.maxT + 1);  // after everything this device has seen, even with a skewed clock
+    const event = normalizeEvent({ ...fields, t });
+    if (!event) throw new Error("bad progress event");
+    const id = `${t.toString(36)}-${this.device}-${(this.seq++).toString(36)}`;
+    this.events[id] = event;
+    this.maxT = t;
+    this.persist();
+    Sync.push();
+    return id;
+  },
+  // Events from elsewhere (the account or another tab). Returns true when something new arrived.
+  merge(incoming) {
+    if (!this.union(incoming)) return false;
+    this.persist();
+    onProgressChanged();
+    return true;
+  },
+  // Write to this browser, first folding in whatever another tab saved meanwhile.
+  persist() {
+    const disk = readLocal(LOG_KEY);
+    if (disk) this.union(normalizeEvents(disk.events));
+    this.refresh();
+    state.localOk = writeLocal(LOG_KEY, { version: 2, events: this.events });
+    Sync.show(Sync.state);
+  },
+};
+// Another tab of this browser saved: take its events too.
+window.addEventListener("storage", (e) => {
+  if (e.key !== LOG_KEY || !e.newValue) return;
+  let other;
+  try { other = JSON.parse(e.newValue); } catch { return; }
+  if (Log.union(normalizeEvents(other && other.events))) { Log.refresh(); onProgressChanged(); }
+});
+function onProgressChanged() {
+  renderStreak();
+  if (state.view === "home" || state.view === "settings") render();
+}
+
+// ===================================================================== account sync
 function use(name) {
   try { return window.claude?.use ? window.claude.use(name) : Promise.resolve(null); }
   catch { return Promise.resolve(null); }
 }
 
-// Progress follows you between devices through the artifact's private per-person store.
-// Rules: every change is written to this browser first (instant, works offline); the account copy
-// is only written after it has been read and merged once (so a fresh device never overwrites it);
-// one write at a time; anything not yet uploaded is retried on the next answer, when you come
-// back to the app, and when the connection returns. Merging never drops a review from either side.
+// Inside the claude.ai viewer the log is also kept in your private per-person store, one document
+// per month (data/users/<you>/log-YYYY-MM), so it follows you to other devices. Uploads read the
+// month first and add to it, never replace it; anything not uploaded yet stays in this browser and
+// is retried on the next answer, when you come back to the app, when the connection returns and on a timer.
 const SYNC_TEXT = {
   connecting: ["connecting…", "Connecting to your saved progress…"],
   saving: ["saving…", "Saving your progress to your account…"],
@@ -483,80 +594,116 @@ const SYNC_TEXT = {
   retrying: ["retrying…", "Couldn't reach your account. Trying again…"],
   offline: ["offline", "Saved in this browser. It uploads to your account when the connection is back."],
   full: ["sync full", "Your account storage for this page is full. Progress is still saved in this browser."],
-  local: ["this device", "Saved in this browser only. Use Settings → Export backup to keep a copy."],
-  none: ["not saved!", "This browser blocks storage, so progress is lost when you close the page. Use Settings → Export backup."],
+  local: ["this device", "Saved in this browser only. Export a backup to keep a copy."],
+  none: ["not saved!", "This browser blocks storage, so progress is lost when you close the page. Export a backup before you leave."],
 };
 const Sync = {
-  ref: null, state: "local", loaded: false, inflight: false, dirty: false, retried: false, pullAgain: false,
+  col: null, state: "local", loaded: false, inflight: false, dirty: false, pullAgain: false,
+  remote: {},  // month document id -> Set of event ids known to be in the account copy
+  quickRetried: false, failures: 0, retryTimer: null,
   async init() {
     this.show("connecting");
     const [db, user] = await Promise.all([use("db"), use("user")]);
     const uid = user ? await user.id() : null;
     if (!db || !uid) return this.show("local");
-    try { this.ref = db.doc(`data/users/${uid}/pymem`); } catch { return this.show("local"); }
+    try { this.col = db.collection(`data/users/${uid}`); } catch { return this.show("local"); }
     await this.pull();
   },
-  // Read the account copy, merge it with this browser's copy, and upload the result if they differ.
+  partOf(t) {
+    const d = new Date(t);
+    return `log-${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
+  },
+  pendingParts() {
+    const parts = new Set();
+    for (const [id, e] of Object.entries(Log.events)) {
+      const part = this.partOf(e.t);
+      if (!(this.remote[part] && this.remote[part].has(id))) parts.add(part);
+    }
+    return [...parts].sort();
+  },
+  // Read every month from the account, fold it into this browser, then upload what the account lacks.
   async pull() {
-    if (!this.ref) return;
+    if (!this.col) return;
     if (this.inflight) { this.pullAgain = true; return; }
     this.inflight = true;
     try {
-      const snap = await this.ref.get();
-      const remote = snap.exists ? normalizeProgress(snap.data()) : null;
-      const merged = remote ? mergeProgress(state.progress, remote) : state.progress;
-      if (canonical(merged) !== canonical(state.progress)) {
-        state.progress = merged;
-        state.localOk = writeLocal(LOCAL_KEY, merged);
-        if (state.view === "home" || state.view === "settings") render();
+      const snap = await this.col.limit(1000).get();
+      const incoming = {};
+      for (const doc of snap.docs) {
+        if (!/^log-\d{4}-\d{2}$/.test(doc.id)) continue;
+        const data = doc.data();
+        const events = normalizeEvents(data && data.events);
+        this.remote[doc.id] = new Set(Object.keys(events));
+        Object.assign(incoming, events);
       }
+      Log.merge(incoming);
       this.loaded = true;
-      if (!remote || canonical(merged) !== canonical(remote)) this.dirty = true;
+      this.dirty = true;
       await this.flush();
     } catch (err) {
       this.fail(err);
     } finally {
       this.inflight = false;
-      if (this.pullAgain) { this.pullAgain = false; this.pull(); }
+      this.again();
     }
   },
   // Called after every local change.
   async push() {
-    if (!this.ref) return;
+    if (!this.col) return;
     this.dirty = true;
-    if (this.inflight) return;                  // the running pull/flush picks this change up
-    if (!this.loaded) return void this.pull();  // never write before the account copy was merged in
+    if (this.inflight) return;                  // the running pull/flush picks it up
+    if (!this.loaded) return void this.pull();  // read the account before writing to it
     this.inflight = true;
     try { await this.flush(); } catch (err) { this.fail(err); } finally {
       this.inflight = false;
-      if (this.pullAgain) { this.pullAgain = false; this.pull(); }
+      this.again();
     }
+  },
+  again() {
+    if (this.pullAgain) { this.pullAgain = false; this.pull(); }
   },
   async flush() {
     while (this.dirty) {
       this.dirty = false;
-      this.show("saving");
-      await this.ref.set(clone(state.progress));  // one write at a time; the loop picks up later changes
+      for (const part of this.pendingParts()) {
+        this.show("saving");
+        const ref = this.col.doc(part);
+        const snap = await ref.get();
+        const data = snap.exists ? snap.data() : null;
+        Log.merge(normalizeEvents(data && data.events));  // keep what other devices added meanwhile
+        const ours = {};
+        for (const [id, e] of Object.entries(Log.events)) if (this.partOf(e.t) === part) ours[id] = e;
+        await ref.set({ events: ours });  // one write at a time; a superset of what we just read
+        this.remote[part] = new Set(Object.keys(ours));
+      }
     }
-    this.retried = false;
+    this.quickRetried = false;
+    this.failures = 0;
+    clearTimeout(this.retryTimer);
+    this.retryTimer = null;
     this.show("synced");
   },
   fail(err) {
     const code = err && err.code;
-    this.dirty = true;  // whatever didn't upload is still on this device and goes up next time
-    if (code === "unavailable" && !this.retried) {
-      this.retried = true;
-      this.show("retrying");
-      setTimeout(() => (this.loaded ? this.push() : this.pull()), 1500 + Math.random() * 1500);
-      return;
-    }
+    this.dirty = true;  // everything is still in this browser and goes up on the next try
     if (code === "quota_exceeded") return this.show("full");
-    if (code === "invalid_argument" || code === "revoked" || code === "not_granted" ||
-        code === "capability_disabled" || code === "capability_removed") {
-      this.ref = null;  // this view can't write to the account: keep studying on this device
+    if (["invalid_argument", "revoked", "not_granted", "capability_disabled", "capability_removed", "transform_error"].includes(code)) {
+      this.col = null;  // this view can't use the account: keep studying on this device
       return this.show("local");
     }
-    this.show("offline");  // unavailable, resource_exhausted, network trouble: retried later
+    const retry = () => {
+      this.retryTimer = null;
+      if (!this.col || document.visibilityState !== "visible") return;  // coming back to the app retries too
+      if (this.loaded) this.push(); else this.pull();
+    };
+    if (code === "unavailable" && !this.quickRetried) {
+      this.quickRetried = true;
+      this.show("retrying");
+      if (!this.retryTimer) this.retryTimer = setTimeout(retry, 1500 + Math.random() * 1500);
+      return;
+    }
+    this.show("offline");
+    if (!this.retryTimer) this.retryTimer = setTimeout(retry, Math.min(300000, 15000 * 2 ** Math.min(this.failures++, 5)));
   },
   show(name) {
     this.state = name;
@@ -567,21 +714,31 @@ const Sync = {
                          offline: "error", full: "error", none: "error" }[shown] || "local";
     el.textContent = label;
     el.title = title;
-    document.querySelectorAll(".save-status").forEach((s) => { s.textContent = title; });
+    document.querySelectorAll(".save-status").forEach((s) => {
+      s.textContent = title;
+      s.classList.toggle("warn", shown === "none" || shown === "full");
+    });
   },
 };
+function saveStatusText() { return SYNC_TEXT[Sync.state === "local" && !state.localOk ? "none" : Sync.state][1]; }
+
+let renderedDay = "";
 document.addEventListener("visibilitychange", () => {
-  if (!Sync.ref) return;
-  if (document.visibilityState === "visible") Sync.pull();  // pick up progress from your other devices
-  else if (Sync.dirty) Sync.push();                         // switching away: try to upload what's pending
+  if (document.visibilityState === "visible") {
+    if (todayISO() !== renderedDay && state.view !== "session") render();  // the app was left open past midnight
+    if (Sync.col) Sync.pull();  // pick up progress from your other devices
+  } else if (Sync.col && Sync.dirty) {
+    Sync.push();  // switching away: try to upload what's pending
+  }
 });
-window.addEventListener("online", () => { Sync.retried = false; Sync.pull(); });
+window.addEventListener("pageshow", () => { if (todayISO() !== renderedDay && state.view !== "session") render(); });
+window.addEventListener("online", () => { Sync.quickRetried = false; if (Sync.col) Sync.pull(); });
 
 // ---------------------------------------------------------------- backup (export / import)
-// The file is the same JSON as the CLI's ~/.pymem_progress.json, so it also moves progress
+// The file is a snapshot in the CLI's ~/.pymem_progress.json format, so it also moves progress
 // between this page and pymem.py.
 async function exportProgress(area) {
-  const text = JSON.stringify(state.progress, null, 1);
+  const text = JSON.stringify({ version: 1, cards: state.progress.cards, history: state.progress.history }, null, 1);
   const filename = `pymem-progress-${todayISO()}.json`;
   const downloads = await use("downloads");
   if (downloads) {
@@ -596,25 +753,26 @@ async function exportProgress(area) {
   }
   const box = h("textarea", { class: "field mono", id: "export-text", rows: "6", readonly: true, "aria-label": "Your progress as text" });
   box.value = text;
+  const hint = h("p", { class: "small", "aria-live": "polite" });
   const copy = h("button", { class: "btn", type: "button" }, "Copy");
+  const selectIt = () => { box.focus(); box.select(); hint.textContent = "Text selected. Tap it and choose Copy."; };
   copy.addEventListener("click", () => {
-    navigator.clipboard.writeText(text).then(
-      () => { copy.textContent = "Copied"; },
-      () => { box.focus(); box.select(); copy.textContent = "Selected. Copy it from the menu"; });
+    let pending;
+    try { pending = navigator.clipboard.writeText(text); } catch { return selectIt(); }
+    pending.then(() => { hint.textContent = "Copied. Paste it somewhere safe, like a note."; }, selectIt);
   });
-  area.replaceChildren(h("p", { class: "small" }, "Copy this text and keep it somewhere safe, like a note:"), box, h("div", { class: "row" }, copy));
+  area.replaceChildren(h("p", { class: "small" }, "Copy this text and keep it somewhere safe, like a note:"), box, h("div", { class: "row" }, copy), hint);
 }
 function importProgress(text) {
   let raw;
-  try { raw = JSON.parse(text); } catch { return { ok: false, msg: "That isn't a PyMem backup: it's not valid JSON." }; }
-  const incoming = normalizeProgress(raw);
-  const cards = Object.keys(incoming.cards).length;
-  const days = Object.keys(incoming.history).length;
+  try { raw = JSON.parse(text); } catch {
+    try { raw = JSON.parse(plainPython(text)); } catch { return { ok: false, msg: "That isn't a PyMem backup: it's not valid JSON." }; }
+  }
+  const snap = normalizeSnapshot(raw);
+  const cards = Object.keys(snap.cards).length;
+  const days = Object.keys(snap.history).length;
   if (!cards && !days) return { ok: false, msg: "That backup has no PyMem progress in it." };
-  const merged = mergeProgress(state.progress, incoming, { ignoreEpoch: true });
-  merged.epoch = state.progress.epoch;
-  state.progress = merged;
-  saveProgress();
+  Log.add({ k: "i", cards: snap.cards, history: snap.history });
   return { ok: true, msg: `Imported ${plural(cards, "card")} and ${plural(days, "day")} of history. Anything already here was kept.` };
 }
 
@@ -697,20 +855,21 @@ function pyStatusText() {
     idle: "Python: starts with your session",
     loading: "Python: loading (about 14 MB, first time only)",
     ready: "Python: ready",
-    failed: "Python unavailable here. You'll check code answers yourself",
+    failed: "Python unavailable: you check code answers yourself",
   }[Py.state];
 }
 function renderPyStatus() {
   document.querySelectorAll(".pystatus").forEach((el) => {
     el.dataset.state = Py.state;
     el.lastChild.textContent = pyStatusText();
-    el.title = Py.state === "failed" ? "Reason: " + Py.reason : "";
+  });
+  document.querySelectorAll(".pyreason").forEach((el) => {
+    el.hidden = Py.state !== "failed";
+    el.textContent = Py.state === "failed" ? `Python couldn't start: ${Py.reason}. Until you reload, you grade one-liners and code yourself.` : "";
   });
 }
 function pyStatusEl() {
-  const el = h("span", { class: "pystatus", "data-state": Py.state }, h("i", {}), pyStatusText());
-  if (Py.state === "failed") el.title = "Reason: " + Py.reason;
-  return el;
+  return h("span", { class: "pystatus", "data-state": Py.state }, h("i", {}), pyStatusText());
 }
 
 // ===================================================================== scheduling
@@ -769,16 +928,16 @@ function streak(today) {
   while (day in hist) { n++; day = addDays(day, -1); }
   return n;
 }
-function logReview(today, count = 1) {
-  state.progress.history[today] = (state.progress.history[today] || 0) + count;
-}
 
 // ===================================================================== rendering
 const view = $("#view");
-function render() {
-  const today = todayISO();
-  const n = streak(today);
+function renderStreak() {
+  const n = streak(todayISO());
   $("#streak").textContent = n ? `🔥 ${n}-day streak` : "start a streak today";
+}
+function render() {
+  renderedDay = todayISO();
+  renderStreak();
   view.replaceChildren();
   if (state.view === "session" && state.session) renderSession();
   else if (state.view === "summary" && state.session) renderSummary();
@@ -795,6 +954,7 @@ $("#brand").addEventListener("click", () => {
   if (state.view === "session") endSession();
   else go("home");
 });
+function proseEl(tag, cls, html) { return h(tag, { class: `${cls} prose`, html }); }
 
 // ---------------------------------------------------------------- home
 function topicStats(key) {
@@ -819,26 +979,30 @@ function renderHome() {
     h("p", { class: "eyebrow" }, fmtDay(today, { weekday: "long", day: "numeric", month: "long" })),
   );
   if (plan.queue.length) {
-    head.append(
+    add(head,
       h("div", { class: "today-counts" },
         h("span", { class: "count" }, h("b", {}, plan.queue.length - fresh), h("span", { class: "muted" }, "due")),
         h("span", { class: "count" }, h("b", {}, fresh), h("span", { class: "muted" }, "new")),
       ),
-      h("button", { class: "btn primary big", type: "button", id: "start", onclick: () => startSession(plan.queue, false) },
+      h("button", { class: "btn primary big", type: "button", id: "start",
+                    onclick: () => startSession(planSession(todayISO()).queue, false) },
         `Start review · ${plural(plan.queue.length, "card")}`),
       h("p", { class: "small muted" },
         `About ${Math.max(1, Math.round(plan.queue.length * 0.6))} min. Progress saves after every card.`),
     );
   } else {
-    // Showing up on a day with nothing due still keeps the streak (once per day).
-    if (!(today in state.progress.history)) { logReview(today, 0); saveProgress(); $("#streak").textContent = `🔥 ${streak(today)}-day streak`; }
+    // Showing up on a day with nothing due still keeps the streak (recorded once per day).
+    if (!(today in state.progress.history)) { Log.add({ k: "v", d: today }); renderStreak(); }
     const upcoming = cards.map((c) => state.progress.cards[c.id]).filter(Boolean).map((r) => r.due).sort()[0];
-    head.append(
+    add(head,
       h("h1", {}, "All caught up"),
       h("p", { class: "muted" }, upcoming ? `Next review: ${fmtDay(upcoming, { weekday: "long", day: "numeric", month: "short" })}.` : "No cards in these topics yet."),
       h("button", { class: "btn primary big", type: "button", onclick: () => startCram(cards, 10) }, "Practice 10 random cards"),
       h("p", { class: "small muted" }, "Practice doesn't change your schedule."),
     );
+  }
+  if (!state.localOk && !Sync.col) {
+    add(head, h("p", { class: "note warn save-status" }, saveStatusText()));
   }
 
   const chips = h("div", { class: "chips", role: "group", "aria-label": "Topics to study" },
@@ -870,7 +1034,7 @@ function renderHome() {
   const reviews = Object.values(state.progress.history).reduce((a, b) => a + b, 0);
   const mastered = all.filter((r) => r.box === MASTERED).length;
 
-  view.append(
+  add(view,
     head,
     h("section", {},
       h("div", { class: "spread" }, h("h2", {}, "Topics"), h("span", { class: "small muted num" }, `${cards.length} cards selected`)),
@@ -879,9 +1043,9 @@ function renderHome() {
     h("section", {},
       h("div", { class: "spread" }, h("h2", {}, "Progress"),
         h("div", { class: "legend" },
-          h("span", {}, h("i", { style: "background:var(--mark)" }), "mastered"),
-          h("span", {}, h("i", { style: "background:var(--accent)" }), "reviewing"),
-          h("span", {}, h("i", { style: "background:color-mix(in srgb, var(--accent) 40%, var(--line))" }), "learning"))),
+          h("span", {}, h("i", { class: "m" }), "mastered"),
+          h("span", {}, h("i", { class: "r" }), "reviewing"),
+          h("span", {}, h("i", { class: "l" }), "learning"))),
       h("div", { class: "topics" }, rows),
       h("div", { class: "stats-line" },
         h("span", {}, `${CARDS.length} cards`), h("span", {}, `${all.length} started`),
@@ -928,34 +1092,29 @@ function renderSession() {
     h("div", { class: "card-meta" },
       h("span", { class: "kind" }, KIND_LABEL[card.kind]),
       h("span", {}, TOPICS[card.topic]),
-      h("span", { class: "row", style: "gap:0.35rem" }, boxesEl(rec), rec ? "" : h("span", {}, "new"),
+      h("span", { class: "row", style: "gap:0.35rem" }, boxesEl(rec), rec ? null : h("span", {}, "new"),
         s.cram ? h("span", {}, "· practice") : null),
     ),
   );
-  view.append(h("div", { class: "stack" }, top, bar), el);
+  add(view, h("div", { class: "stack" }, top, bar), el);
   const ui = { card, el, rec };
   ({ concept: askConcept, output: askOutput, expr: askExpr, code: askCode })[card.kind](ui);
-  if (card.kind === "expr" || card.kind === "code") view.append(pyStatusEl());
+  if (card.kind === "expr" || card.kind === "code") add(view, pyStatusEl());
 }
 
 function codeBlock(html) { return h("pre", { class: "code", html }); }
 function whyEl(card) {
-  return card.why ? h("div", { class: "why" }, h("span", { class: "eyebrow" }, "Why"), h("p", {}, card.why)) : null;
+  return card.whyHtml ? h("div", { class: "why" }, h("span", { class: "eyebrow" }, "Why"), proseEl("p", "", card.whyHtml)) : null;
 }
 function feedback(kind, verdict, ...body) {
   return h("div", { class: `feedback ${kind}`, role: "status" }, h("span", { class: "verdict" }, verdict), body);
 }
 function focusSoon(el) { if (el && window.matchMedia("(hover: hover)").matches) setTimeout(() => el.focus(), 30); }
 
-// Record a grade right away (so quitting never loses it); remember how to undo it for the typo override.
+// Each answer is logged right away (so quitting never loses it); the typo override adds a "fix" event.
 function applyGrade(card, grade) {
   const s = state.session;
-  const prev = state.progress.cards[card.id] ? clone(state.progress.cards[card.id]) : null;
-  if (!s.cram) {
-    const rec = state.progress.cards[card.id] || (state.progress.cards[card.id] = {});
-    reschedule(rec, grade, s.today);
-  }
-  logReview(s.today);
+  const eventId = Log.add(s.cram ? { k: "r", c: card.id, g: grade, d: s.today, x: 1 } : { k: "r", c: card.id, g: grade, d: s.today });
   s.results.push({ id: card.id, grade });
   let requeued = false;
   if (grade === AGAIN && !s.retried.includes(card.id)) {
@@ -963,24 +1122,19 @@ function applyGrade(card, grade) {
     s.queue.push(card.id);
     requeued = true;
   }
-  s.undo = { id: card.id, prev, requeued };
-  saveProgress();
+  s.undo = { id: card.id, eventId, requeued };
 }
 function overrideToGood(card) {
   const s = state.session;
   const u = s.undo;
   if (!u || u.id !== card.id) return;
-  if (!s.cram) {
-    if (u.prev) state.progress.cards[card.id] = clone(u.prev); else delete state.progress.cards[card.id];
-    reschedule(state.progress.cards[card.id] || (state.progress.cards[card.id] = {}), GOOD, s.today);
-  }
+  Log.add({ k: "f", of: u.eventId });
   s.results[s.results.length - 1].grade = GOOD;
   if (u.requeued) {
     s.queue.splice(s.queue.lastIndexOf(card.id), 1);
     s.retried = s.retried.filter((id) => id !== card.id);
   }
   s.undo = null;
-  saveProgress();
 }
 function next() {
   const s = state.session;
@@ -1000,26 +1154,28 @@ function afterAnswer(ui, grade, { overridable = true } = {}) {
   applyGrade(ui.card, grade);
   const row = h("div", { class: "actions" });
   if (grade === AGAIN) {
-    row.append(h("button", { class: "btn primary", type: "button", onclick: next }, "Continue"));
+    add(row, h("button", { class: "btn primary", type: "button", onclick: next }, "Continue"));
     if (overridable) {
-      row.append(h("button", { class: "btn ghost", type: "button", onclick: () => { overrideToGood(ui.card); next(); } },
+      add(row, h("button", { class: "btn ghost", type: "button", onclick: () => { overrideToGood(ui.card); next(); } },
         "I was right (just a typo)"));
     }
-    const note = state.session.retried.includes(ui.card.id) && state.session.undo?.requeued
+    const note = state.session.undo && state.session.undo.requeued
       ? h("p", { class: "small muted" }, "This one comes back at the end of the session.") : null;
-    ui.el.append(row, note);
+    add(ui.el, row, note);
   } else {
-    row.append(h("button", { class: "btn primary", type: "button", onclick: next },
+    add(row, h("button", { class: "btn primary", type: "button", onclick: next },
       state.session.index + 1 >= state.session.queue.length ? "Finish" : "Next card"));
-    ui.el.append(row);
+    add(ui.el, row);
   }
   focusSoon(row.querySelector("button"));
 }
 function gradeButtons(rec, onGrade, three = false) {
   const defs = [[AGAIN, "Again", "again"], [HARD, "Hard", "hard"], [GOOD, "Good", "good"], [EASY, "Easy", "easy"]];
+  let used = false;  // a double tap must not grade twice
   return h("div", { class: "grades" + (three ? " three" : "") },
     defs.filter(([g]) => !three || g !== EASY).map(([g, label, cls]) =>
-      h("button", { class: `grade ${cls}`, type: "button", "data-grade": String(g + 1), onclick: () => onGrade(g) },
+      h("button", { class: `grade ${cls}`, type: "button", "data-grade": String(g + 1),
+                    onclick: () => { if (!used) { used = true; onGrade(g); } } },
         label, h("small", {}, dayLabel(nextIntervalDays(rec, g))))));
 }
 
@@ -1030,7 +1186,7 @@ function askConcept(ui) {
                                 autocapitalize: "sentences", spellcheck: "false" });
   const reveal = h("button", { class: "btn primary", type: "button", id: "reveal" }, "Show answer");
   const actions = h("div", { class: "actions" }, reveal);
-  el.append(h("p", { class: "question" }, card.q), h("label", { class: "lbl", for: "concept-answer" }, "Try it from memory first"), input, actions);
+  add(el, proseEl("p", "question", card.qHtml), h("label", { class: "lbl", for: "concept-answer" }, "Try it from memory first"), input, actions);
   reveal.addEventListener("click", () => {
     actions.remove();
     input.readOnly = true;
@@ -1039,8 +1195,8 @@ function askConcept(ui) {
       applyGrade(card, g);
       next();
     });
-    el.append(
-      h("div", { class: "feedback info" }, h("span", { class: "eyebrow" }, "Answer"), h("p", { class: "answer-text" }, card.answer)),
+    add(el,
+      h("div", { class: "feedback info" }, h("span", { class: "eyebrow" }, "Answer"), proseEl("p", "answer-text", card.answerTextHtml)),
       whyEl(card),
       h("p", { class: "lbl" }, "How well did you know it?"),
       grades,
@@ -1051,17 +1207,29 @@ function askConcept(ui) {
 }
 
 // ---------------------------------------------------------------- predict the output
+// Same rules as pymem.py: leading padding counts when the real output has it; other spacing
+// differences are forgiven, except inside quoted strings and between two words.
+const QUOTED_OR_SPACE = /('(?:[^'\\]|\\.)*'|"(?:[^"\\]|\\.)*")|\s+/g;
+const leadSpace = (s) => s.length - s.trimStart().length;
+function squash(s) {
+  const text = s.trim();
+  return text.replace(QUOTED_OR_SPACE, (m, quoted, offset) => {
+    if (quoted) return quoted;
+    const before = text[offset - 1] || "", after = text[offset + m.length] || "";
+    return /\w/.test(before) && /\w/.test(after) ? " " : "";
+  });
+}
 function compareOutput(got, expected, raises) {
   got = got.map((g) => plainPython(g).replace(/\s+$/, ""));
   if (raises && got.length) {
     const name = expected[expected.length - 1];
     if (got[got.length - 1].trim().split(":")[0].trim() === name) got[got.length - 1] = name;
   }
-  const same = (a, b) => a.length === b.length && a.every((x, i) => x === b[i]);
-  const trim = (list) => list.map((x) => x.trim());
-  if (same(got, expected) || same(trim(got), trim(expected))) return { ok: true, got };
-  const squash = (x) => x.replace(/\s+/g, "");
-  if (got.every((g, i) => squash(g) === squash(expected[i]))) return { ok: true, note: "Only the spacing differs.", got };
+  if (got.length !== expected.length) return { ok: false, got };
+  if (got.every((g, i) => (leadSpace(expected[i]) ? g === expected[i] : g.trim() === expected[i].trim()))) return { ok: true, got };
+  if (got.every((g, i) => (leadSpace(expected[i]) === 0 || leadSpace(g) === leadSpace(expected[i])) && squash(g) === squash(expected[i]))) {
+    return { ok: true, note: "Only the spacing differs.", got };
+  }
   return { ok: false, got };
 }
 function askOutput(ui) {
@@ -1074,7 +1242,7 @@ function askOutput(ui) {
   const check = h("button", { class: "btn primary", type: "button", id: "check" }, "Check");
   const show = h("button", { class: "btn ghost", type: "button" }, "Show answer");
   const actions = h("div", { class: "actions" }, check, show);
-  el.append(
+  add(el,
     h("p", { class: "question" }, "What does this print?"),
     codeBlock(card.codeHtml),
     h("p", { class: "small muted" }, `${plural(n, "line")} of output. If it raises, type the exception name, like TypeError.`),
@@ -1086,12 +1254,15 @@ function askOutput(ui) {
     e.preventDefault();
     if (i < n - 1) inputs[i + 1].focus(); else check.click();
   }));
+  let settled = false;
   const finish = (gaveUp) => {
+    if (settled) return;
+    settled = true;
     actions.remove();
     inputs.forEach((inp) => { inp.readOnly = true; });
     const result = gaveUp ? { ok: false, got: null } : compareOutput(inputs.map((x) => x.value), card.out, card.raises);
     if (result.ok) {
-      el.append(feedback("good", pick(PRAISE), result.note ? h("p", { class: "small" }, result.note) : null,
+      add(el, feedback("good", pick(PRAISE), result.note ? h("p", { class: "small" }, result.note) : null,
         result.note ? h("pre", { class: "code" }, card.out.join("\n")) : null), whyEl(card));
       afterAnswer(ui, GOOD);
       return;
@@ -1100,11 +1271,11 @@ function askOutput(ui) {
     card.out.forEach((line, i) => {
       lines.append(line + "\n");
       const mine = result.got && result.got[i];
-      if (mine != null && mine.replace(/\s+/g, "") !== line.replace(/\s+/g, "")) {
+      if (mine != null && compareOutput([mine], [line], false).ok === false) {
         lines.append(h("span", { class: "yours" }, `${mine.trim() || "(empty)"}   ← yours`), "\n");
       }
     });
-    el.append(feedback(gaveUp ? "info" : "bad", gaveUp ? "Here's the output" : "Not quite. It prints:", lines), whyEl(card));
+    add(el, feedback(gaveUp ? "info" : "bad", gaveUp ? "Here's the output" : "Not quite. It prints:", lines), whyEl(card));
     afterAnswer(ui, AGAIN, { overridable: !gaveUp });
   };
   check.addEventListener("click", () => finish(false));
@@ -1115,7 +1286,7 @@ function askOutput(ui) {
 // ---------------------------------------------------------------- one-liner & write code (shared flow)
 function selfCheck(ui, answerEl) {
   // Python couldn't start in this browser: show the reference and let you grade yourself.
-  ui.el.append(
+  add(ui.el,
     feedback("info", "Check it yourself", h("p", { class: "small" }, "Python couldn't start in this browser, so compare with the reference answer:"), answerEl),
     whyEl(ui.card),
     h("p", { class: "lbl" }, "Was yours right?"),
@@ -1125,7 +1296,7 @@ function selfCheck(ui, answerEl) {
     applyGrade(ui.card, g);
     next();
   }, true);
-  ui.el.append(grades);
+  add(ui.el, grades);
 }
 function runAttempts(ui, { getAnswer, kind, answerEl, praiseExtra, lockInput }) {
   const { card, el } = ui;
@@ -1133,31 +1304,42 @@ function runAttempts(ui, { getAnswer, kind, answerEl, praiseExtra, lockInput }) 
   const show = h("button", { class: "btn ghost", type: "button" }, "Show answer");
   const actions = h("div", { class: "actions" }, check, show);
   const status = h("div", { class: "stack", "aria-live": "polite" });
-  el.append(actions, status);
+  add(el, actions, status);
   let attempt = 0;
+  let settled = false;  // the card got its grade: late results from a slow check are ignored
 
   const reveal = (gaveUp) => {
+    if (settled) return;
+    settled = true;
     actions.remove();
     lockInput();
-    el.append(feedback(gaveUp ? "info" : "bad", gaveUp ? "The answer" : "Here's one way to write it", answerEl()), whyEl(card));
+    add(el, feedback(gaveUp ? "info" : "bad", gaveUp ? "The answer" : "Here's one way to write it", answerEl()), whyEl(card));
     afterAnswer(ui, AGAIN, { overridable: !gaveUp });
   };
 
   check.addEventListener("click", async () => {
     const answer = getAnswer();
-    if (!answer.trim()) return;
+    if (settled || !answer.trim()) return;
     check.disabled = true;
     status.replaceChildren(h("p", { class: "small muted" },
-      Py.state === "ready" ? "Checking…" : "Starting Python… the first time downloads about 14 MB."));
+      Py.state === "ready" ? "Checking…" : "Starting Python. The first start downloads about 14 MB."));
     const result = await Py.check(kind, card, answer);
+    if (settled || !el.isConnected) return;  // you moved on (Show answer, End session) while it ran
     check.disabled = false;
     status.replaceChildren();
-    if (result === null) { actions.remove(); lockInput(); selfCheck(ui, answerEl()); return; }
-    attempt++;
-    if (result.ok) {
+    if (result === null) {
+      settled = true;
       actions.remove();
       lockInput();
-      el.append(feedback("good", pick(PRAISE), praiseExtra ? praiseExtra(answer) : null), whyEl(card));
+      selfCheck(ui, answerEl());
+      return;
+    }
+    attempt++;
+    if (result.ok) {
+      settled = true;
+      actions.remove();
+      lockInput();
+      add(el, feedback("good", pick(PRAISE), praiseExtra ? praiseExtra(answer) : null), whyEl(card));
       afterAnswer(ui, attempt === 1 ? GOOD : HARD);
       return;
     }
@@ -1177,8 +1359,8 @@ function askExpr(ui) {
     class: "field mono", type: "text", id: "expr-answer", autocapitalize: "off", autocorrect: "off", autocomplete: "off",
     spellcheck: "false", enterkeyhint: "go", placeholder: "one expression", "aria-label": "Your expression",
   });
-  el.append(
-    h("p", { class: "question" }, card.q),
+  add(el,
+    proseEl("p", "question", card.qHtml),
     card.code ? codeBlock(card.codeHtml) : null,
     h("div", { class: "target" }, h("span", { class: "lbl" }, "Target value"), h("pre", { class: "code" }, card.target)),
     input,
@@ -1198,9 +1380,12 @@ function askExpr(ui) {
 }
 
 // ---------------------------------------------------------------- code editor (textarea + key bar)
+// Edits go through execCommand when possible so Undo (shake, Cmd+Z) still works.
 function insertText(ta, text, caretBack = 0) {
-  const start = ta.selectionStart, end = ta.selectionEnd;
-  ta.setRangeText(text, start, end, "end");
+  if (document.activeElement !== ta) ta.focus();
+  let done = false;
+  try { done = document.execCommand("insertText", false, text); } catch { done = false; }
+  if (!done) ta.setRangeText(text, ta.selectionStart, ta.selectionEnd, "end");
   if (caretBack) ta.selectionStart = ta.selectionEnd = ta.selectionEnd - caretBack;
 }
 function currentLine(ta) {
@@ -1214,12 +1399,17 @@ function newlineWithIndent(ta) {
   insertText(ta, "\n" + indent);
 }
 function dedent(ta) {
-  const lineStart = ta.value.lastIndexOf("\n", ta.selectionStart - 1) + 1;
+  const caret = ta.selectionStart;
+  const lineStart = caret === 0 ? 0 : ta.value.lastIndexOf("\n", caret - 1) + 1;
   const spaces = ta.value.slice(lineStart).match(/^ {1,4}/);
   if (!spaces) return;
-  const caret = ta.selectionStart;
-  ta.setRangeText("", lineStart, lineStart + spaces[0].length, "preserve");
-  ta.selectionStart = ta.selectionEnd = Math.max(lineStart, caret - spaces[0].length);
+  if (document.activeElement !== ta) ta.focus();
+  ta.setSelectionRange(lineStart, lineStart + spaces[0].length);
+  let done = false;
+  try { done = document.execCommand("delete", false); } catch { done = false; }
+  if (!done) ta.setRangeText("", lineStart, lineStart + spaces[0].length, "start");
+  const pos = Math.max(lineStart, caret - spaces[0].length);
+  ta.setSelectionRange(pos, pos);
 }
 function moveCaret(ta, delta) {
   const pos = Math.max(0, Math.min(ta.value.length, ta.selectionStart + delta));
@@ -1251,7 +1441,7 @@ function codeEditor(id) {
   const bar = h("div", { class: "keybar", role: "toolbar", "aria-label": "Code keys" });
   for (const [label, act, wide] of keys) {
     const key = h("button", { class: "key" + (wide ? " wide" : ""), type: "button", tabindex: "-1" }, label);
-    const run = () => { if (document.activeElement !== ta) ta.focus(); act(); };
+    const run = () => { if (ta.readOnly) return; if (document.activeElement !== ta) ta.focus(); act(); };
     let touch = null;
     // Touch: act on a tap (not a scroll of the bar) and cancel the click so the keyboard stays up.
     key.addEventListener("touchstart", (e) => { const t = e.touches[0]; touch = { x: t.clientX, y: t.clientY }; }, { passive: true });
@@ -1264,14 +1454,14 @@ function codeEditor(id) {
     key.addEventListener("click", run);
     bar.append(key);
   }
-  return { ta, wrap: h("div", {}, bar, ta) };
+  return { ta, bar, wrap: h("div", {}, bar, ta) };
 }
 
 function askCode(ui) {
   const { card, el } = ui;
   const editor = codeEditor("code-answer");
-  el.append(
-    h("p", { class: "question" }, card.q),
+  add(el,
+    proseEl("p", "question", card.qHtml),
     card.code ? h("div", { class: "stack" }, h("span", { class: "lbl" }, "Given"), codeBlock(card.codeHtml)) : null,
     h("label", { class: "lbl", for: "code-answer" }, "Your code (Return auto-indents)"),
     editor.wrap,
@@ -1279,7 +1469,7 @@ function askCode(ui) {
   runAttempts(ui, {
     kind: "code",
     getAnswer: () => { editor.ta.value = plainPython(editor.ta.value); return editor.ta.value.replace(/\s+$/, "") + "\n"; },
-    lockInput: () => { editor.ta.readOnly = true; editor.wrap.querySelector(".keybar").remove(); },
+    lockInput: () => { editor.ta.readOnly = true; editor.bar.remove(); },
     answerEl: () => codeBlock(card.answerHtml),
     praiseExtra: () => h("div", { class: "stack" },
       h("span", { class: "small" }, `All ${plural(card.tests.length, "test")} pass. The reference solution:`), codeBlock(card.answerHtml)),
@@ -1301,9 +1491,9 @@ function renderSummary() {
   const dueTomorrow = dueCards(cards, tomorrow).length;
   const describe = (id) => {
     const c = BY_ID.get(id);
-    return c.q ? c.q.split("\n")[0] : "What does this print? " + c.code.split("\n")[0];
+    return c.q ? plainText(c.q.split("\n")[0]) : "What does this print? " + c.code.split("\n")[0];
   };
-  view.append(
+  add(view,
     h("section", { class: "today" },
       h("p", { class: "eyebrow" }, s.cram ? "Practice done" : "Session done"),
       h("div", { class: "row", style: "gap:0.75rem;align-items:baseline" },
@@ -1311,7 +1501,7 @@ function renderSummary() {
       h("p", {}, mood),
       s.cram ? h("p", { class: "small muted" }, "Practice cards don't change your schedule.")
         : h("p", { class: "small muted num" }, `${mastered}/${cards.length} mastered · ${dueTomorrow} due by tomorrow (${fmtDay(tomorrow, { weekday: "short", day: "numeric", month: "short" })})`),
-      h("p", { class: "small save-status" }, SYNC_TEXT[Sync.state === "local" && !state.localOk ? "none" : Sync.state][1]),
+      h("p", { class: "small save-status" }, saveStatusText()),
     ),
     missed.length ? h("section", {}, h("h2", {}, "Missed this time"),
       h("ul", { class: "missed" }, missed.map((id) => h("li", {}, h("span", { class: "mono small" }, id), " ", h("span", { class: "muted small" }, describe(id))))),
@@ -1335,22 +1525,22 @@ function renderBrowse() {
       (!q || [c.id, c.q, c.code, c.answer, c.why].join("\n").toLowerCase().includes(q)));
     list.replaceChildren(
       h("p", { class: "small muted num" }, plural(cards.length, "card")),
-      cards.map((c) => {
-        const title = c.q ? c.q.split("\n")[0] : c.code.split("\n")[0];
+      ...cards.map((c) => {
+        const title = plainText((c.q || c.code).split("\n")[0]);
         const body = h("div", { class: "stack" });
-        if (c.kind === "concept") body.append(h("p", { class: "answer-text" }, c.q), h("div", { class: "feedback info" }, h("p", { class: "answer-text" }, c.answer)));
-        if (c.kind === "output") body.append(codeBlock(c.codeHtml), h("span", { class: "lbl" }, "Output"), h("pre", { class: "code" }, c.out.join("\n")));
-        if (c.kind === "expr") body.append(h("p", { class: "answer-text" }, c.q), codeBlock(c.codeHtml), h("span", { class: "lbl" }, "Answer"),
+        if (c.kind === "concept") add(body, proseEl("p", "answer-text", c.qHtml), h("div", { class: "feedback info" }, proseEl("p", "answer-text", c.answerTextHtml)));
+        if (c.kind === "output") add(body, codeBlock(c.codeHtml), h("span", { class: "lbl" }, "Output"), h("pre", { class: "code" }, c.out.join("\n")));
+        if (c.kind === "expr") add(body, proseEl("p", "answer-text", c.qHtml), codeBlock(c.codeHtml), h("span", { class: "lbl" }, "Answer"),
           codeBlock(c.answerHtml), h("span", { class: "small muted" }, "→ " + c.target));
-        if (c.kind === "code") body.append(h("p", { class: "answer-text" }, c.q), c.code ? codeBlock(c.codeHtml) : null, h("span", { class: "lbl" }, "Solution"), codeBlock(c.answerHtml));
-        body.append(whyEl(c));
+        if (c.kind === "code") add(body, proseEl("p", "answer-text", c.qHtml), c.code ? codeBlock(c.codeHtml) : null, h("span", { class: "lbl" }, "Solution"), codeBlock(c.answerHtml));
+        add(body, whyEl(c));
         return h("details", { class: "sheet" },
           h("summary", {}, h("span", { class: "sum-text" }, title), h("span", { class: "kind small" }, KIND_LABEL[c.kind])), body);
       }));
   };
   topicSel.addEventListener("change", () => { b.topic = topicSel.value; fill(); });
   search.addEventListener("input", () => { b.query = search.value; fill(); });
-  view.append(
+  add(view,
     h("div", { class: "spread" }, h("h1", {}, "Study sheet"), h("button", { class: "btn ghost", type: "button", onclick: () => go("home") }, "← Today")),
     h("div", { class: "browse-tools" }, topicSel, search),
     list,
@@ -1367,16 +1557,15 @@ function renderSettings() {
   sizeSel.addEventListener("change", () => { state.prefs.size = Number(sizeSel.value); savePrefs(); });
   newSel.addEventListener("change", () => { state.prefs.newPer = Number(newSel.value); savePrefs(); });
 
-  const resetArea = h("div", { class: "row" });
+  const resetArea = h("div", { class: "row", "aria-live": "polite" });
+  const idleReset = () => resetArea.replaceChildren(h("button", { class: "btn danger", type: "button", id: "reset", onclick: askReset }, "Reset progress"));
   const askReset = () => resetArea.replaceChildren(
     h("button", { class: "btn danger", type: "button", id: "confirm-reset", onclick: () => {
-      state.progress = emptyProgress();
-      state.progress.epoch = Date.now();  // newer epoch: your other devices drop their old copy too
-      saveProgress();
+      Log.add({ k: "z" });  // a reset event: every device replays to an empty start from here
+      renderStreak();
       resetArea.replaceChildren(h("p", { class: "small" }, "Progress erased. Fresh start."));
     } }, "Yes, erase everything"),
     h("button", { class: "btn ghost", type: "button", onclick: idleReset }, "Keep my progress"));
-  const idleReset = () => resetArea.replaceChildren(h("button", { class: "btn danger", type: "button", id: "reset", onclick: askReset }, "Reset progress"));
   idleReset();
 
   const backupArea = h("div", { class: "stack", "aria-live": "polite" });
@@ -1396,11 +1585,12 @@ function renderSettings() {
     const box = h("textarea", { class: "field mono", id: "paste-backup", rows: "5", autocapitalize: "off", autocorrect: "off",
                                 spellcheck: "false", placeholder: '{"version": 1, "cards": {…}, "history": {…}}', "aria-label": "Paste your backup" });
     backupArea.replaceChildren(box, h("div", { class: "row" },
-      h("button", { class: "btn primary", type: "button", onclick: () => showResult(importProgress(plainPython(box.value))) }, "Import")));
+      h("button", { class: "btn primary", type: "button", onclick: () => showResult(importProgress(box.value)) }, "Import")));
     focusSoon(box);
   };
-  const loadPy = h("button", { class: "btn", type: "button", onclick: () => Py.start() }, "Load Python now");
-  view.append(
+  const shown = Sync.state === "local" && !state.localOk ? "none" : Sync.state;
+
+  add(view,
     h("div", { class: "spread" }, h("h1", {}, "Settings"), h("button", { class: "btn ghost", type: "button", onclick: () => go("home") }, "← Today")),
     h("section", {},
       h("div", { class: "setting" }, h("label", { for: "set-size" }, "Cards per session"), sizeSel),
@@ -1409,14 +1599,16 @@ function renderSettings() {
     h("section", {},
       h("h2", {}, "Checking answers"),
       h("p", { class: "muted" }, "One-liners and code are checked by running real Python (Pyodide) in your browser. It downloads about 14 MB the first time, so you may want to load it on Wi-Fi."),
-      h("div", { class: "row" }, loadPy, pyStatusEl()),
+      h("div", { class: "row" }, h("button", { class: "btn", type: "button", onclick: () => Py.start() }, "Load Python now"), pyStatusEl()),
+      h("p", { class: "small muted pyreason", hidden: Py.state !== "failed" },
+        Py.state === "failed" ? `Python couldn't start: ${Py.reason}. Until you reload, you grade one-liners and code yourself.` : ""),
     ),
     h("section", {},
       h("h2", {}, "Your progress"),
-      h("p", { class: "note save-status" }, SYNC_TEXT[Sync.state === "local" && !state.localOk ? "none" : Sync.state][1]),
-      h("p", { class: "muted" }, "Every answer is saved right away, in this browser and, when you're signed in, to your account so it follows you between devices."),
+      h("p", { class: `note save-status${shown === "none" || shown === "full" ? " warn" : ""}` }, saveStatusText()),
+      h("p", { class: "muted" }, "Every answer is saved the moment you grade it: in this browser and, when you're signed in, to your account, so it follows you between devices. Studying on two devices at once is fine; their progress is combined."),
       h("h3", {}, "Backup"),
-      h("p", { class: "muted" }, "Export a copy of your progress any time. The file also works with the terminal version (copy it to ~/.pymem_progress.json), and you can import the terminal's file here."),
+      h("p", { class: "muted" }, "Export a copy of your progress any time. The file also works with the terminal version (save it as ~/.pymem_progress.json), and you can import the terminal's file here."),
       h("div", { class: "row" },
         h("button", { class: "btn", type: "button", id: "export", onclick: () => exportProgress(backupArea) }, "Export backup"),
         h("label", { class: "btn", for: "import-file", id: "import", tabindex: "0",
@@ -1445,11 +1637,13 @@ document.addEventListener("keydown", (e) => {
 
 // ---------------------------------------------------------------- boot
 function start(saved) {
-  if (saved && saved.session && Array.isArray(saved.session.queue) && saved.session.queue.every((id) => BY_ID.has(id))) {
-    state.session = Object.assign(saved.session, { undo: null });
-    state.view = saved.view === "summary" ? "summary" : "session";
-    if (state.session.index >= state.session.queue.length) state.view = "summary";
-    if (state.session.queue.some((id) => ["expr", "code"].includes(BY_ID.get(id).kind))) Py.start();
+  Log.init();
+  const s = saved && saved.session;
+  if (s && Array.isArray(s.queue) && s.queue.length && s.queue.every((id) => BY_ID.has(id)) &&
+      Number.isInteger(s.index) && Array.isArray(s.results) && Array.isArray(s.retried) && typeof s.today === "string") {
+    state.session = Object.assign({}, s, { undo: null });
+    state.view = saved.view === "summary" || s.index >= s.queue.length ? "summary" : "session";
+    if (s.queue.some((id) => ["expr", "code"].includes(BY_ID.get(id).kind))) Py.start();
   }
   render();
   Sync.init();
@@ -1458,6 +1652,6 @@ const hot = window.claude && window.claude.hot;
 if (hot && typeof hot.snapshot === "function") {
   try { hot.snapshot(() => ({ view: state.view, session: state.session ? Object.assign({}, state.session, { undo: null }) : null })); } catch { /* optional */ }
 }
-if (hot && typeof hot.ready === "function") hot.ready(start);
+if (hot && typeof hot.ready === "function") hot.ready((data) => start(data || {}));
 else start((hot && hot.data) || {});
 </script>

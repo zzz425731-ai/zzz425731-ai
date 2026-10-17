@@ -22,6 +22,7 @@ import json
 import keyword
 import os
 import random
+import re
 import shlex
 import shutil
 import signal
@@ -414,8 +415,33 @@ def ask_concept(card):
     return self_grade()
 
 
-def _same(a, b):
-    return "".join(a.split()) == "".join(b.split())
+_QUOTED_OR_SPACE = re.compile(r"""('(?:[^'\\]|\\.)*'|"(?:[^"\\]|\\.)*")|\s+""")
+
+
+def _lead(s):
+    return len(s) - len(s.lstrip())
+
+
+def _squash(s):
+    """Drop spacing that doesn't matter: not inside quoted strings, and not between two words."""
+    text = s.strip()
+
+    def repl(m):
+        if m.group(1):
+            return m.group(1)
+        before, after = text[m.start() - 1:m.start()], text[m.end():m.end() + 1]
+        return " " if re.match(r"\w", before, re.ASCII) and re.match(r"\w", after, re.ASCII) else ""
+    return _QUOTED_OR_SPACE.sub(repl, text)
+
+
+def _same_trimmed(typed, expected):
+    """Equal apart from surrounding whitespace (leading padding counts when the output has it)."""
+    return typed == expected if _lead(expected) else typed.strip() == expected.strip()
+
+
+def _same(typed, expected):
+    """Equal apart from unimportant spacing. The web version's compareOutput uses the same rules."""
+    return (_lead(expected) == 0 or _lead(typed) == _lead(expected)) and _squash(typed) == _squash(expected)
 
 
 def ask_output(card):
@@ -438,7 +464,7 @@ def ask_output(card):
     if got is not None:
         if err is not None and got[-1].strip().split(":")[0].strip() == expected[-1]:
             got[-1] = expected[-1]  # accept "TypeError: message" too
-        if got == expected or [g.strip() for g in got] == [e.strip() for e in expected]:
+        if all(_same_trimmed(g, e) for g, e in zip(got, expected)):
             praise()
             show_why(card)
             return GOOD
