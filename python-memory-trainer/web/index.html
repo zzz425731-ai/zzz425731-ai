@@ -402,9 +402,10 @@ function readLocal(key) {
   try { const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : null; } catch { return null; }
 }
 function writeLocal(key, value) {
-  try { localStorage.setItem(key, JSON.stringify(value)); } catch { /* private mode or blocked storage */ }
+  try { localStorage.setItem(key, JSON.stringify(value)); return true; } catch { return false; }  // private mode or blocked storage
 }
-function emptyProgress() { return { version: 1, cards: {}, history: {}, savedAt: 0 }; }
+// Same shape as the CLI's ~/.pymem_progress.json, plus savedAt and epoch (when progress was last reset).
+function emptyProgress() { return { version: 1, cards: {}, history: {}, savedAt: 0, epoch: 0 }; }
 function normalizeProgress(raw) {
   const p = emptyProgress();
   if (!raw || typeof raw !== "object") return p;
@@ -422,12 +423,17 @@ function normalizeProgress(raw) {
     }
   }
   p.savedAt = Number(raw.savedAt) || 0;
+  p.epoch = Number(raw.epoch) || 0;
   return p;
 }
 // Two devices may both have studied: per card keep the record with more reviews,
 // per day keep the larger count. Nothing learned on either device is lost.
-function mergeProgress(a, b) {
+// A reset starts a new epoch: the copy with the newer epoch wins outright, so a reset
+// on one device isn't undone by old data on another. Imports ignore epochs.
+function mergeProgress(a, b, { ignoreEpoch = false } = {}) {
+  if (!ignoreEpoch && a.epoch !== b.epoch) return clone(a.epoch > b.epoch ? a : b);
   const out = emptyProgress();
+  out.epoch = a.epoch;
   for (const id of new Set([...Object.keys(a.cards), ...Object.keys(b.cards)])) {
     const ra = a.cards[id], rb = b.cards[id];
     if (!ra || !rb) { out.cards[id] = clone(ra || rb); continue; }
@@ -447,13 +453,15 @@ const state = {
   view: "home",
   session: null,
   browse: { topic: "", query: "" },
+  localOk: true,  // false when this browser refuses to store anything
 };
 state.prefs.topics = (state.prefs.topics || []).filter((t) => t in TOPICS);
 
 function saveProgress() {
   state.progress.savedAt = Date.now();
-  writeLocal(LOCAL_KEY, state.progress);
+  state.localOk = writeLocal(LOCAL_KEY, state.progress);
   Sync.push();
+  if (!Sync.ref) Sync.show(Sync.state);  // refresh the "not saved" warning
 }
 function savePrefs() { writeLocal(PREFS_KEY, state.prefs); }
 
@@ -464,78 +472,151 @@ function use(name) {
 }
 
 // Progress follows you between devices through the artifact's private per-person store.
+// Rules: every change is written to this browser first (instant, works offline); the account copy
+// is only written after it has been read and merged once (so a fresh device never overwrites it);
+// one write at a time; anything not yet uploaded is retried on the next answer, when you come
+// back to the app, and when the connection returns. Merging never drops a review from either side.
+const SYNC_TEXT = {
+  connecting: ["connecting…", "Connecting to your saved progress…"],
+  saving: ["saving…", "Saving your progress to your account…"],
+  synced: ["synced", "Saved to your account. It follows you to your other devices."],
+  retrying: ["retrying…", "Couldn't reach your account. Trying again…"],
+  offline: ["offline", "Saved in this browser. It uploads to your account when the connection is back."],
+  full: ["sync full", "Your account storage for this page is full. Progress is still saved in this browser."],
+  local: ["this device", "Saved in this browser only. Use Settings → Export backup to keep a copy."],
+  none: ["not saved!", "This browser blocks storage, so progress is lost when you close the page. Use Settings → Export backup."],
+};
 const Sync = {
-  ref: null, inflight: false, dirty: false, retried: false,
+  ref: null, state: "local", loaded: false, inflight: false, dirty: false, retried: false, pullAgain: false,
   async init() {
-    this.show("connecting", "connecting…");
+    this.show("connecting");
     const [db, user] = await Promise.all([use("db"), use("user")]);
     const uid = user ? await user.id() : null;
-    if (!db || !uid) return this.show("local", "this device");
-    try { this.ref = db.doc(`data/users/${uid}/pymem`); } catch { return this.show("local", "this device"); }
+    if (!db || !uid) return this.show("local");
+    try { this.ref = db.doc(`data/users/${uid}/pymem`); } catch { return this.show("local"); }
     await this.pull();
   },
+  // Read the account copy, merge it with this browser's copy, and upload the result if they differ.
   async pull() {
-    if (!this.ref || this.inflight) return;
+    if (!this.ref) return;
+    if (this.inflight) { this.pullAgain = true; return; }
+    this.inflight = true;
     try {
       const snap = await this.ref.get();
       const remote = snap.exists ? normalizeProgress(snap.data()) : null;
       const merged = remote ? mergeProgress(state.progress, remote) : state.progress;
-      const localChanged = canonical(merged) !== canonical(state.progress);
-      state.progress = merged;
-      writeLocal(LOCAL_KEY, merged);
-      if (localChanged && state.view === "home") render();
-      if (!remote || canonical(merged) !== canonical(remote)) await this.push();
-      else this.show("synced", "synced");
-    } catch (err) { this.fail(err); }
-  },
-  async push() {
-    if (!this.ref) return;
-    if (this.inflight) { this.dirty = true; return; }
-    this.inflight = true;
-    this.show("saving", "saving…");
-    try {
-      do {
-        this.dirty = false;
-        await this.ref.set(clone(state.progress));  // one write at a time; loop picks up later changes
-      } while (this.dirty);
-      this.retried = false;
-      this.show("synced", "synced");
+      if (canonical(merged) !== canonical(state.progress)) {
+        state.progress = merged;
+        state.localOk = writeLocal(LOCAL_KEY, merged);
+        if (state.view === "home" || state.view === "settings") render();
+      }
+      this.loaded = true;
+      if (!remote || canonical(merged) !== canonical(remote)) this.dirty = true;
+      await this.flush();
     } catch (err) {
       this.fail(err);
     } finally {
       this.inflight = false;
+      if (this.pullAgain) { this.pullAgain = false; this.pull(); }
     }
+  },
+  // Called after every local change.
+  async push() {
+    if (!this.ref) return;
+    this.dirty = true;
+    if (this.inflight) return;                  // the running pull/flush picks this change up
+    if (!this.loaded) return void this.pull();  // never write before the account copy was merged in
+    this.inflight = true;
+    try { await this.flush(); } catch (err) { this.fail(err); } finally {
+      this.inflight = false;
+      if (this.pullAgain) { this.pullAgain = false; this.pull(); }
+    }
+  },
+  async flush() {
+    while (this.dirty) {
+      this.dirty = false;
+      this.show("saving");
+      await this.ref.set(clone(state.progress));  // one write at a time; the loop picks up later changes
+    }
+    this.retried = false;
+    this.show("synced");
   },
   fail(err) {
     const code = err && err.code;
+    this.dirty = true;  // whatever didn't upload is still on this device and goes up next time
     if (code === "unavailable" && !this.retried) {
       this.retried = true;
-      this.show("saving", "retrying…");
-      setTimeout(() => this.push(), 1500 + Math.random() * 1500);
+      this.show("retrying");
+      setTimeout(() => (this.loaded ? this.push() : this.pull()), 1500 + Math.random() * 1500);
       return;
     }
-    if (code === "quota_exceeded") return this.show("error", "sync full");
-    if (code === "unavailable" || code === "resource_exhausted") return this.show("error", "offline, saved here");
-    // not allowed to write here (or the grant went away): keep studying on this device
-    this.ref = null;
-    this.show("local", "this device");
+    if (code === "quota_exceeded") return this.show("full");
+    if (code === "invalid_argument" || code === "revoked" || code === "not_granted" ||
+        code === "capability_disabled" || code === "capability_removed") {
+      this.ref = null;  // this view can't write to the account: keep studying on this device
+      return this.show("local");
+    }
+    this.show("offline");  // unavailable, resource_exhausted, network trouble: retried later
   },
-  show(stateName, label) {
+  show(name) {
+    this.state = name;
+    const shown = (name === "local" && !state.localOk) ? "none" : name;
+    const [label, title] = SYNC_TEXT[shown];
     const el = $("#sync");
-    el.dataset.state = stateName;
+    el.dataset.state = { synced: "synced", saving: "saving", connecting: "connecting", retrying: "saving",
+                         offline: "error", full: "error", none: "error" }[shown] || "local";
     el.textContent = label;
-    el.title = {
-      synced: "Progress is saved to your account and follows you to other devices.",
-      saving: "Saving your progress…",
-      connecting: "Connecting to your saved progress…",
-      local: "Progress is saved in this browser only.",
-      error: "Couldn't reach your saved progress. It's kept in this browser and will sync later.",
-    }[stateName] || "";
+    el.title = title;
+    document.querySelectorAll(".save-status").forEach((s) => { s.textContent = title; });
   },
 };
 document.addEventListener("visibilitychange", () => {
-  if (document.visibilityState === "visible") Sync.ref ? Sync.pull() : null;
+  if (!Sync.ref) return;
+  if (document.visibilityState === "visible") Sync.pull();  // pick up progress from your other devices
+  else if (Sync.dirty) Sync.push();                         // switching away: try to upload what's pending
 });
+window.addEventListener("online", () => { Sync.retried = false; Sync.pull(); });
+
+// ---------------------------------------------------------------- backup (export / import)
+// The file is the same JSON as the CLI's ~/.pymem_progress.json, so it also moves progress
+// between this page and pymem.py.
+async function exportProgress(area) {
+  const text = JSON.stringify(state.progress, null, 1);
+  const filename = `pymem-progress-${todayISO()}.json`;
+  const downloads = await use("downloads");
+  if (downloads) {
+    try {
+      await downloads.save({ filename, data: text });
+      area.replaceChildren(h("p", { class: "small" }, `Backup saved as ${filename}.`));
+      return;
+    } catch (err) {
+      if (err && err.code === "declined") { area.replaceChildren(h("p", { class: "small muted" }, "Export cancelled.")); return; }
+      // anything else: fall back to copy and paste below
+    }
+  }
+  const box = h("textarea", { class: "field mono", id: "export-text", rows: "6", readonly: true, "aria-label": "Your progress as text" });
+  box.value = text;
+  const copy = h("button", { class: "btn", type: "button" }, "Copy");
+  copy.addEventListener("click", () => {
+    navigator.clipboard.writeText(text).then(
+      () => { copy.textContent = "Copied"; },
+      () => { box.focus(); box.select(); copy.textContent = "Selected. Copy it from the menu"; });
+  });
+  area.replaceChildren(h("p", { class: "small" }, "Copy this text and keep it somewhere safe, like a note:"), box, h("div", { class: "row" }, copy));
+}
+function importProgress(text) {
+  let raw;
+  try { raw = JSON.parse(text); } catch { return { ok: false, msg: "That isn't a PyMem backup: it's not valid JSON." }; }
+  const incoming = normalizeProgress(raw);
+  const cards = Object.keys(incoming.cards).length;
+  const days = Object.keys(incoming.history).length;
+  if (!cards && !days) return { ok: false, msg: "That backup has no PyMem progress in it." };
+  const merged = mergeProgress(state.progress, incoming, { ignoreEpoch: true });
+  merged.epoch = state.progress.epoch;
+  state.progress = merged;
+  saveProgress();
+  return { ok: true, msg: `Imported ${plural(cards, "card")} and ${plural(days, "day")} of history. Anything already here was kept.` };
+}
 
 // ===================================================================== Python checker (Pyodide in a worker)
 const Py = {
@@ -1230,6 +1311,7 @@ function renderSummary() {
       h("p", {}, mood),
       s.cram ? h("p", { class: "small muted" }, "Practice cards don't change your schedule.")
         : h("p", { class: "small muted num" }, `${mastered}/${cards.length} mastered · ${dueTomorrow} due by tomorrow (${fmtDay(tomorrow, { weekday: "short", day: "numeric", month: "short" })})`),
+      h("p", { class: "small save-status" }, SYNC_TEXT[Sync.state === "local" && !state.localOk ? "none" : Sync.state][1]),
     ),
     missed.length ? h("section", {}, h("h2", {}, "Missed this time"),
       h("ul", { class: "missed" }, missed.map((id) => h("li", {}, h("span", { class: "mono small" }, id), " ", h("span", { class: "muted small" }, describe(id))))),
@@ -1289,6 +1371,7 @@ function renderSettings() {
   const askReset = () => resetArea.replaceChildren(
     h("button", { class: "btn danger", type: "button", id: "confirm-reset", onclick: () => {
       state.progress = emptyProgress();
+      state.progress.epoch = Date.now();  // newer epoch: your other devices drop their old copy too
       saveProgress();
       resetArea.replaceChildren(h("p", { class: "small" }, "Progress erased. Fresh start."));
     } }, "Yes, erase everything"),
@@ -1296,6 +1379,26 @@ function renderSettings() {
   const idleReset = () => resetArea.replaceChildren(h("button", { class: "btn danger", type: "button", id: "reset", onclick: askReset }, "Reset progress"));
   idleReset();
 
+  const backupArea = h("div", { class: "stack", "aria-live": "polite" });
+  const showResult = (result) => backupArea.replaceChildren(
+    h("div", { class: `feedback ${result.ok ? "good" : "bad"}` }, h("p", {}, result.msg)));
+  const importFile = h("input", { type: "file", id: "import-file", accept: ".json,application/json,text/plain", hidden: true });
+  importFile.addEventListener("change", () => {
+    const file = importFile.files && importFile.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => showResult(importProgress(String(reader.result)));
+    reader.onerror = () => showResult({ ok: false, msg: "Couldn't read that file. Try Paste a backup instead." });
+    reader.readAsText(file);
+    importFile.value = "";
+  });
+  const showPaste = () => {
+    const box = h("textarea", { class: "field mono", id: "paste-backup", rows: "5", autocapitalize: "off", autocorrect: "off",
+                                spellcheck: "false", placeholder: '{"version": 1, "cards": {…}, "history": {…}}', "aria-label": "Paste your backup" });
+    backupArea.replaceChildren(box, h("div", { class: "row" },
+      h("button", { class: "btn primary", type: "button", onclick: () => showResult(importProgress(plainPython(box.value))) }, "Import")));
+    focusSoon(box);
+  };
   const loadPy = h("button", { class: "btn", type: "button", onclick: () => Py.start() }, "Load Python now");
   view.append(
     h("div", { class: "spread" }, h("h1", {}, "Settings"), h("button", { class: "btn ghost", type: "button", onclick: () => go("home") }, "← Today")),
@@ -1310,7 +1413,18 @@ function renderSettings() {
     ),
     h("section", {},
       h("h2", {}, "Your progress"),
-      h("p", { class: "muted" }, "When you're signed in, progress is saved to your account and follows you between devices. Otherwise it stays in this browser."),
+      h("p", { class: "note save-status" }, SYNC_TEXT[Sync.state === "local" && !state.localOk ? "none" : Sync.state][1]),
+      h("p", { class: "muted" }, "Every answer is saved right away, in this browser and, when you're signed in, to your account so it follows you between devices."),
+      h("h3", {}, "Backup"),
+      h("p", { class: "muted" }, "Export a copy of your progress any time. The file also works with the terminal version (copy it to ~/.pymem_progress.json), and you can import the terminal's file here."),
+      h("div", { class: "row" },
+        h("button", { class: "btn", type: "button", id: "export", onclick: () => exportProgress(backupArea) }, "Export backup"),
+        h("label", { class: "btn", for: "import-file", id: "import", tabindex: "0",
+                     onkeydown: (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); importFile.click(); } } }, "Import from file"),
+        h("button", { class: "btn ghost", type: "button", onclick: showPaste }, "Paste a backup")),
+      importFile,
+      backupArea,
+      h("h3", {}, "Start over"),
       resetArea,
     ),
     h("section", {},
