@@ -32,6 +32,15 @@ python web/build.py        # writes web/dist/ (cards data, worker, Pyodide)
 cd web/dist && python -m http.server 8000   # then open http://<your-computer>:8000 on the phone
 ```
 
+**Your progress is saved after every answer.** The web version stores it as a log of
+what you did (each review, typo fix, reset or import), and works out boxes and due dates by
+replaying that log. Copies on different devices or tabs are combined by joining their logs, so
+studying on your phone and laptop on the same day never loses a review. Inside claude.ai the
+log is also kept in your private per-account store (one small document per month), so it
+follows you between devices; without an account it stays in the browser.
+**Settings → Export backup** saves a file in the same format as the terminal's
+`~/.pymem_progress.json`, and **Import** reads either one.
+
 ## The four card types
 
 | Type | You do | Checked by |
