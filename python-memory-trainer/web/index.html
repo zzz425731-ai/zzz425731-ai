@@ -12,7 +12,7 @@
   --ink: #142033;
   --muted: #5a6678;
   --line: #d8dee7;
-  --field-line: #8792a3;
+  --field-line: #808b9c;
   --accent: #2f67a8;
   --accent-ink: #ffffff;
   --accent-soft: #e4edf8;
@@ -199,12 +199,12 @@ button { font: inherit; color: inherit; }
 .bar span { display: block; height: 100%; }
 .bar .m { background: var(--mark); }
 .bar .r { background: var(--accent); }
-.bar .l { background: var(--learn); }
+.bar .l { background: var(--learn); box-shadow: inset 0 0 0 1px var(--accent); }
 .legend { display: flex; flex-wrap: wrap; gap: 0.25rem 1rem; font-size: var(--step--1); color: var(--muted); }
 .legend i { display: inline-block; width: 0.7rem; height: 0.7rem; border-radius: 3px; margin-right: 0.35rem; vertical-align: -0.05em; }
 .legend .m { background: var(--mark); }
 .legend .r { background: var(--accent); }
-.legend .l { background: var(--learn); }
+.legend .l { background: var(--learn); box-shadow: inset 0 0 0 1px var(--accent); }
 .stats-line { display: flex; flex-wrap: wrap; gap: 0.25rem 1rem; font-size: var(--step--1); color: var(--muted); font-variant-numeric: tabular-nums; }
 .note { border-radius: 12px; padding: 0.75rem 0.9rem; background: var(--accent-soft); font-size: var(--step--1); }
 .note.warn { background: var(--bad-soft); }
@@ -242,7 +242,7 @@ button { font: inherit; color: inherit; }
 .target .code { padding: 0.35rem 0.6rem; flex: 1 1 12rem; }
 .lbl { font-size: var(--step--1); font-weight: 600; color: var(--muted); }
 .field, .code-input {
-  width: 100%; font-size: 16px; color: var(--ink); background: var(--surface);
+  width: 100%; min-height: 44px; font-size: 16px; color: var(--ink); background: var(--surface);
   border: 1px solid var(--field-line); border-radius: 10px; padding: 0.65rem 0.75rem;
 }
 .field.mono, .code-input { font-family: var(--font-code); font-variation-settings: "MONO" 1, "CASL" 0; }
@@ -301,7 +301,6 @@ details.sheet summary {
 }
 details.sheet summary::-webkit-details-marker { display: none; }
 details.sheet summary .sum-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-details.sheet[open] summary .sum-text { white-space: normal; }
 details.sheet > .stack { padding-bottom: 0.9rem; }
 
 /* ---------- settings ---------- */
@@ -444,7 +443,6 @@ function savePrefs() { writeLocal(PREFS_KEY, state.prefs); }
 //   visit  {k:"v", d, t}                         opened on a day with nothing due: keeps the streak
 // t is milliseconds and never goes backwards on one device (see Log.add).
 const LOG_KEY = "pymem.log.v2";
-const OLD_KEY = "pymem.progress.v1";  // the first web build stored a snapshot here
 const DEVICE_KEY = "pymem.device";
 const DAY_RE = /^\d{4}-\d{2}-\d{2}$/;
 const toInt = (v) => { const n = Math.trunc(Number(v)); return Number.isFinite(n) && n > 0 ? n : 0; };
@@ -468,7 +466,7 @@ function normalizeSnapshot(raw) {
 function normalizeEvent(e) {
   if (!e || typeof e !== "object") return null;
   const t = Number(e.t);
-  if (!Number.isFinite(t) || t < 0) return null;
+  if (!Number.isFinite(t) || t < 0 || t > 8.64e15) return null;
   if (e.k === "r") {
     const g = Number(e.g);
     if (typeof e.c !== "string" || typeof e.d !== "string" || !DAY_RE.test(e.d) || ![0, 1, 2, 3].includes(g)) return null;
@@ -510,22 +508,17 @@ function replay(events) {
   return { cards, history };
 }
 
+const randomTag = (n) => Array.from(crypto.getRandomValues(new Uint8Array(n)), (b) => "abcdefghijklmnopqrstuvwxyz0123456789"[b % 36]).join("");
 const Log = {
-  events: {}, device: "", seq: 0, maxT: 0,
+  events: {}, device: "", load: randomTag(4), seq: 0, maxT: 0,
   init() {
     this.device = readLocal(DEVICE_KEY);
     if (typeof this.device !== "string" || !/^[a-z0-9]{8}$/.test(this.device)) {
-      this.device = Array.from(crypto.getRandomValues(new Uint8Array(8)), (b) => "abcdefghijklmnopqrstuvwxyz0123456789"[b % 36]).join("");
+      this.device = randomTag(8);
       writeLocal(DEVICE_KEY, this.device);
     }
     const saved = readLocal(LOG_KEY);
     this.union(normalizeEvents(saved && saved.events));
-    if (!saved) {
-      const old = normalizeSnapshot(readLocal(OLD_KEY));
-      if (Object.keys(old.cards).length || Object.keys(old.history).length) {
-        this.events["m-" + this.device] = { k: "i", t: 1, cards: old.cards, history: old.history };
-      }
-    }
     this.refresh();
   },
   union(incoming) {
@@ -539,10 +532,13 @@ const Log = {
   refresh() { state.progress = replay(this.events); },
   // Record something you did. Saved in this browser at once, then uploaded.
   add(fields) {
+    const disk = readLocal(LOG_KEY);  // another tab may have saved since we last looked
+    if (disk) this.union(normalizeEvents(disk.events));
     const t = Math.max(Date.now(), this.maxT + 1);  // after everything this device has seen, even with a skewed clock
     const event = normalizeEvent({ ...fields, t });
     if (!event) throw new Error("bad progress event");
-    const id = `${t.toString(36)}-${this.device}-${(this.seq++).toString(36)}`;
+    // device, then a tag for this page load (two tabs of one browser never mint the same id), then a counter
+    const id = `${t.toString(36)}-${this.device}-${this.load}.${(this.seq++).toString(36)}`;
     this.events[id] = event;
     this.maxT = t;
     this.persist();
@@ -570,11 +566,16 @@ window.addEventListener("storage", (e) => {
   if (e.key !== LOG_KEY || !e.newValue) return;
   let other;
   try { other = JSON.parse(e.newValue); } catch { return; }
-  if (Log.union(normalizeEvents(other && other.events))) { Log.refresh(); onProgressChanged(); }
+  const theirs = normalizeEvents(other && other.events);
+  const added = Log.union(theirs);
+  if (Object.keys(Log.events).some((id) => !(id in theirs))) Log.persist();  // their write missed some of ours
+  else if (added) Log.refresh();
+  if (added) onProgressChanged();
 });
+// Only the home view re-renders: Settings may hold a half-typed backup or an open confirmation.
 function onProgressChanged() {
   renderStreak();
-  if (state.view === "home" || state.view === "settings") render();
+  if (state.view === "home") render();
 }
 
 // ===================================================================== account sync
@@ -583,10 +584,12 @@ function use(name) {
   catch { return Promise.resolve(null); }
 }
 
-// Inside the claude.ai viewer the log is also kept in your private per-person store, one document
-// per month (data/users/<you>/log-YYYY-MM), so it follows you to other devices. Uploads read the
-// month first and add to it, never replace it; anything not uploaded yet stays in this browser and
-// is retried on the next answer, when you come back to the app, when the connection returns and on a timer.
+// Inside the claude.ai viewer the log is also kept in your private per-person store
+// (data/users/<you>/...), so it follows you to other devices. Each device writes only its own
+// documents, log-<device>-<n>, and starts a new one before a document gets near the 256 KiB limit;
+// it reads everyone's. With a single writer per document no upload can erase another's. Anything not
+// uploaded yet stays in this browser and is retried on the next answer, when you come back to the app,
+// when the connection returns and on a timer.
 const SYNC_TEXT = {
   connecting: ["connecting…", "Connecting to your saved progress…"],
   saving: ["saving…", "Saving your progress to your account…"],
@@ -595,11 +598,18 @@ const SYNC_TEXT = {
   offline: ["offline", "Saved in this browser. It uploads to your account when the connection is back."],
   full: ["sync full", "Your account storage for this page is full. Progress is still saved in this browser."],
   local: ["this device", "Saved in this browser only. Export a backup to keep a copy."],
-  none: ["not saved!", "This browser blocks storage, so progress is lost when you close the page. Export a backup before you leave."],
+  none: ["not saved!", "This browser can't store progress and your account can't be reached, so closing the page loses it. Export a backup before you leave."],
 };
+const DOC_LIMIT = 200 * 1024;  // bytes; the store's cap is 256 KiB per document
+const byteLength = (text) => new TextEncoder().encode(text).length;
+// What the save indicator should say: never claim local saving when the browser refuses to store.
+function shownSync(name = Sync.state) {
+  return !state.localOk && !["synced", "saving", "connecting"].includes(name) ? "none" : name;
+}
 const Sync = {
   col: null, state: "local", loaded: false, inflight: false, dirty: false, pullAgain: false,
-  remote: {},  // month document id -> Set of event ids known to be in the account copy
+  remote: new Set(),  // ids of events known to be in the account copy
+  chunk: 0,           // this device's current document number
   quickRetried: false, failures: 0, retryTimer: null,
   async init() {
     this.show("connecting");
@@ -609,33 +619,27 @@ const Sync = {
     try { this.col = db.collection(`data/users/${uid}`); } catch { return this.show("local"); }
     await this.pull();
   },
-  partOf(t) {
-    const d = new Date(t);
-    return `log-${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
-  },
-  pendingParts() {
-    const parts = new Set();
-    for (const [id, e] of Object.entries(Log.events)) {
-      const part = this.partOf(e.t);
-      if (!(this.remote[part] && this.remote[part].has(id))) parts.add(part);
-    }
-    return [...parts].sort();
-  },
-  // Read every month from the account, fold it into this browser, then upload what the account lacks.
+  myDoc(n) { return `log-${Log.device}-${n}`; },
+  pending() { return Object.keys(Log.events).filter((id) => !this.remote.has(id)); },
+  // Read every log document, fold them into this browser, then upload what the account lacks.
   async pull() {
     if (!this.col) return;
     if (this.inflight) { this.pullAgain = true; return; }
     this.inflight = true;
     try {
       const snap = await this.col.limit(1000).get();
-      const incoming = {};
+      const incoming = {}, seen = new Set();
+      const mine = new RegExp(`^log-${Log.device}-(\\d+)$`);
       for (const doc of snap.docs) {
-        if (!/^log-\d{4}-\d{2}$/.test(doc.id)) continue;
+        if (!doc.id.startsWith("log-")) continue;
         const data = doc.data();
         const events = normalizeEvents(data && data.events);
-        this.remote[doc.id] = new Set(Object.keys(events));
+        for (const id of Object.keys(events)) seen.add(id);
         Object.assign(incoming, events);
+        const m = doc.id.match(mine);
+        if (m) this.chunk = Math.max(this.chunk, Number(m[1]));
       }
+      this.remote = seen;
       Log.merge(incoming);
       this.loaded = true;
       this.dirty = true;
@@ -665,16 +669,26 @@ const Sync = {
   async flush() {
     while (this.dirty) {
       this.dirty = false;
-      for (const part of this.pendingParts()) {
+      for (let ids = this.pending(); ids.length; ids = this.pending()) {
         this.show("saving");
-        const ref = this.col.doc(part);
+        const ref = this.col.doc(this.myDoc(this.chunk));
         const snap = await ref.get();
         const data = snap.exists ? snap.data() : null;
-        Log.merge(normalizeEvents(data && data.events));  // keep what other devices added meanwhile
-        const ours = {};
-        for (const [id, e] of Object.entries(Log.events)) if (this.partOf(e.t) === part) ours[id] = e;
-        await ref.set({ events: ours });  // one write at a time; a superset of what we just read
-        this.remote[part] = new Set(Object.keys(ours));
+        const raw = data && data.events && typeof data.events === "object" && !Array.isArray(data.events) ? data.events : {};
+        Log.merge(normalizeEvents(raw));
+        const body = { ...(data || {}), events: { ...raw } };  // keep anything a newer version stored here
+        let size = byteLength(JSON.stringify(body)), added = 0;
+        for (const id of ids) {
+          if (id in body.events) continue;
+          const more = byteLength(JSON.stringify(Log.events[id])) + byteLength(id) + 4;
+          if (size + more > DOC_LIMIT && Object.keys(body.events).length) break;
+          body.events[id] = Log.events[id];
+          size += more;
+          added++;
+        }
+        if (added) await ref.set(body);  // this device is the only writer of this document
+        for (const id of Object.keys(body.events)) this.remote.add(id);
+        if (this.pending().length && (!added || size > DOC_LIMIT * 0.9)) this.chunk++;  // full: start the next one
       }
     }
     this.quickRetried = false;
@@ -707,7 +721,7 @@ const Sync = {
   },
   show(name) {
     this.state = name;
-    const shown = (name === "local" && !state.localOk) ? "none" : name;
+    const shown = shownSync(name);
     const [label, title] = SYNC_TEXT[shown];
     const el = $("#sync");
     el.dataset.state = { synced: "synced", saving: "saving", connecting: "connecting", retrying: "saving",
@@ -720,7 +734,7 @@ const Sync = {
     });
   },
 };
-function saveStatusText() { return SYNC_TEXT[Sync.state === "local" && !state.localOk ? "none" : Sync.state][1]; }
+function saveStatusText() { return SYNC_TEXT[shownSync()][1]; }
 
 let renderedDay = "";
 document.addEventListener("visibilitychange", () => {
@@ -733,6 +747,10 @@ document.addEventListener("visibilitychange", () => {
 });
 window.addEventListener("pageshow", () => { if (todayISO() !== renderedDay && state.view !== "session") render(); });
 window.addEventListener("online", () => { Sync.quickRetried = false; if (Sync.col) Sync.pull(); });
+// While the app is open, look for other devices' progress once a minute (a read; it writes only if something is pending).
+setInterval(() => {
+  if (Sync.col && Sync.loaded && !Sync.inflight && document.visibilityState === "visible") Sync.pull();
+}, 60000);
 
 // ---------------------------------------------------------------- backup (export / import)
 // The file is a snapshot in the CLI's ~/.pymem_progress.json format, so it also moves progress
@@ -829,7 +847,14 @@ const Py = {
     return new Promise((resolve) => this.waiters.push(resolve));
   },
   // Resolves {ok, msg}, or null when Python can't run here (then you check yourself).
-  async check(kind, card, answer) {
+  // Checks run one at a time, so each gets its full 5 s on a live worker.
+  queue: Promise.resolve(),
+  check(kind, card, answer) {
+    const job = this.queue.then(() => this.run(kind, card, answer));
+    this.queue = job.then(() => {}, () => {});
+    return job;
+  },
+  async run(kind, card, answer) {
     if (!(await this.whenReady())) return null;
     return new Promise((resolve) => {
       const id = ++this.seq;
@@ -1001,7 +1026,7 @@ function renderHome() {
       h("p", { class: "small muted" }, "Practice doesn't change your schedule."),
     );
   }
-  if (!state.localOk && !Sync.col) {
+  if (shownSync() === "none") {
     add(head, h("p", { class: "note warn save-status" }, saveStatusText()));
   }
 
@@ -1176,7 +1201,7 @@ function gradeButtons(rec, onGrade, three = false) {
     defs.filter(([g]) => !three || g !== EASY).map(([g, label, cls]) =>
       h("button", { class: `grade ${cls}`, type: "button", "data-grade": String(g + 1),
                     onclick: () => { if (!used) { used = true; onGrade(g); } } },
-        label, h("small", {}, dayLabel(nextIntervalDays(rec, g))))));
+        label, state.session && state.session.cram ? null : h("small", {}, dayLabel(nextIntervalDays(rec, g))))));
 }
 
 // ---------------------------------------------------------------- recall
@@ -1382,6 +1407,7 @@ function askExpr(ui) {
 // ---------------------------------------------------------------- code editor (textarea + key bar)
 // Edits go through execCommand when possible so Undo (shake, Cmd+Z) still works.
 function insertText(ta, text, caretBack = 0) {
+  if (ta.readOnly) return;
   if (document.activeElement !== ta) ta.focus();
   let done = false;
   try { done = document.execCommand("insertText", false, text); } catch { done = false; }
@@ -1399,6 +1425,7 @@ function newlineWithIndent(ta) {
   insertText(ta, "\n" + indent);
 }
 function dedent(ta) {
+  if (ta.readOnly) return;
   const caret = ta.selectionStart;
   const lineStart = caret === 0 ? 0 : ta.value.lastIndexOf("\n", caret - 1) + 1;
   const spaces = ta.value.slice(lineStart).match(/^ {1,4}/);
@@ -1421,11 +1448,12 @@ function codeEditor(id) {
     spellcheck: "false", "aria-label": "Your code", placeholder: "def ...",
   });
   ta.addEventListener("keydown", (e) => {
-    if (e.isComposing) return;
+    if (e.isComposing || ta.readOnly) return;
     if (e.key === "Enter" && !e.shiftKey && !e.metaKey && !e.ctrlKey && !e.altKey) { e.preventDefault(); newlineWithIndent(ta); }
     else if (e.key === "Tab" && !e.metaKey && !e.ctrlKey && !e.altKey) { e.preventDefault(); e.shiftKey ? dedent(ta) : insertText(ta, "    "); }
   });
   ta.addEventListener("beforeinput", (e) => {
+    if (ta.readOnly) return;
     if (e.inputType === "insertLineBreak" || e.inputType === "insertParagraph") { e.preventDefault(); newlineWithIndent(ta); }
   });
   const keys = [
@@ -1491,7 +1519,7 @@ function renderSummary() {
   const dueTomorrow = dueCards(cards, tomorrow).length;
   const describe = (id) => {
     const c = BY_ID.get(id);
-    return c.q ? plainText(c.q.split("\n")[0]) : "What does this print? " + c.code.split("\n")[0];
+    return c.q ? plainText(c.title) : "What does this print? " + c.code.split("\n")[0];
   };
   add(view,
     h("section", { class: "today" },
@@ -1526,7 +1554,7 @@ function renderBrowse() {
     list.replaceChildren(
       h("p", { class: "small muted num" }, plural(cards.length, "card")),
       ...cards.map((c) => {
-        const title = plainText((c.q || c.code).split("\n")[0]);
+        const title = plainText(c.title);
         const body = h("div", { class: "stack" });
         if (c.kind === "concept") add(body, proseEl("p", "answer-text", c.qHtml), h("div", { class: "feedback info" }, proseEl("p", "answer-text", c.answerTextHtml)));
         if (c.kind === "output") add(body, codeBlock(c.codeHtml), h("span", { class: "lbl" }, "Output"), h("pre", { class: "code" }, c.out.join("\n")));
@@ -1588,7 +1616,7 @@ function renderSettings() {
       h("button", { class: "btn primary", type: "button", onclick: () => showResult(importProgress(box.value)) }, "Import")));
     focusSoon(box);
   };
-  const shown = Sync.state === "local" && !state.localOk ? "none" : Sync.state;
+  const shown = shownSync();
 
   add(view,
     h("div", { class: "spread" }, h("h1", {}, "Settings"), h("button", { class: "btn ghost", type: "button", onclick: () => go("home") }, "← Today")),
@@ -1650,7 +1678,12 @@ function start(saved) {
 }
 const hot = window.claude && window.claude.hot;
 if (hot && typeof hot.snapshot === "function") {
-  try { hot.snapshot(() => ({ view: state.view, session: state.session ? Object.assign({}, state.session, { undo: null }) : null })); } catch { /* optional */ }
+  try {
+    hot.snapshot(() => ({ view: state.view, session: state.session ? Object.assign({}, state.session, {
+      index: state.session.undo ? state.session.index + 1 : state.session.index,  // the card on screen is already graded
+      undo: null,
+    }) : null }));
+  } catch { /* optional */ }
 }
 if (hot && typeof hot.ready === "function") hot.ready((data) => start(data || {}));
 else start((hot && hot.data) || {});

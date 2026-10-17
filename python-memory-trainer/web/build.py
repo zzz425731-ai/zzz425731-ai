@@ -92,7 +92,7 @@ def prose(text):
     for line in lines[1:]:
         prev = out[-1]
         keep = (not line.strip() or line[:1].isspace() or re.match(r"[-*•]\s|\d+[.)]\s|[A-Z][\w+#]*( [\w+#]+)?:\s", line)
-                or prev[:1].isspace() or "  " in prev.strip() or "->" in prev or prev.rstrip().endswith(":") or not prev.strip())
+                or prev[:1].isspace() or "  " in prev.strip() or ("->" in prev and "->" in line) or prev.rstrip().endswith(":") or not prev.strip())
         if keep:
             out.append(line)
         else:
@@ -110,6 +110,7 @@ def card_data(card):
         "id": card.id, "topic": card.topic, "kind": card.kind, "q": card.q,
         "code": card.code, "answer": card.answer, "why": card.why,
         "qHtml": prose_html(card.q), "whyHtml": prose_html(card.why),
+        "title": (prose(card.q) if card.q else card.code).split("\n")[0],
         "alt": list(card.alt), "tests": list(card.tests), "after": card.after,
         "check": card.check, "checkMsg": card.check_msg,
         "codeHtml": highlight_html(card.code) if card.code else "",
