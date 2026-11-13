@@ -27,7 +27,7 @@ Option Explicit
 '        想重新生成就再运行一次 BuildJXGL，自动生成的窗体会被覆盖。
 '==================================================================
 
-Public Const SYS_TITLE As String = "USST教学管理系统"      '<- 标题改这里
+Public Const SYS_TITLE As String = "USST本科教育管理系统"      '<- 标题改这里
 
 Private Const FONT_TITLE As String = "华文彩云"
 Private Const FONT_CN As String = "宋体"

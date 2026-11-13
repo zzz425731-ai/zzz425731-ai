@@ -39,10 +39,10 @@
 
 ## 改标题
 
-老师投影上的标题，中间有两个字太糊认不出来，所以默认写的是 `USST教学管理系统`。要改的话，在模块最上面找到这一行：
+标题已经设成 `USST本科教育管理系统`。要改的话，在模块最上面找到这一行：
 
 ```vb
-Public Const SYS_TITLE As String = "USST教学管理系统"      '<- 标题改这里
+Public Const SYS_TITLE As String = "USST本科教育管理系统"      '<- 标题改这里
 ```
 
 改完重新运行 `BuildJXGL`。
